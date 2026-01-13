@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini RAG Skin</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>Gemini RAG Skin</h1>
+        <p class="subtitle">Query your project documentation with AI</p>
+    </header>
+
+    <main class="container">
+        <!-- API Warning -->
+        <div th:if="${!apiConfigured}" class="message message-warning">
+            <strong>Warning:</strong> Gemini API key not configured. Set the GEMINI_API_KEY environment variable.
+        </div>
+
+        <!-- Global Messages -->
+        <div th:if="${error}" class="message message-error" th:text="${error}"></div>
+
+        <!-- Config Section -->
+        <section class="section config-section">
+            <h2 class="section-title">Configuration</h2>
+            <form th:action="@{/config/save}" method="post" class="config-form">
+                <div class="form-group">
+                    <label for="systemPrompt">System Prompt</label>
+                    <textarea id="systemPrompt" name="systemPrompt" rows="4" th:text="${systemPrompt}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prompt1">Prompt 1</label>
+                    <input type="text" id="prompt1" name="prompt1" th:value="${prompt1}">
+                </div>
+                <div class="form-group">
+                    <label for="prompt2">Prompt 2</label>
+                    <input type="text" id="prompt2" name="prompt2" th:value="${prompt2}">
+                </div>
+                <div class="form-group">
+                    <label for="prompt3">Prompt 3</label>
+                    <input type="text" id="prompt3" name="prompt3" th:value="${prompt3}">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </div>
+                <div th:if="${configSuccess}" class="message message-success" th:text="${configSuccess}"></div>
+                <div th:if="${configError}" class="message message-error" th:text="${configError}"></div>
+            </form>
+        </section>
+
+        <!-- File Upload Section -->
+        <section class="section upload-section">
+            <h2 class="section-title">Upload Files</h2>
+            <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="upload-form">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop files here, or click to select</p>
+                    <p class="upload-hint">Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)</p>
+                    <input type="file" id="fileInput" name="files" multiple
+                           accept=".pdf,.doc,.docx,.txt,.md"
+                           onchange="updateFileList(this)">
+                </div>
+                <div id="selectedFiles" class="selected-files"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">Upload Files</button>
+                </div>
+                <div th:if="${uploadSuccess}" class="message message-success" th:text="${uploadSuccess}"></div>
+                <div th:if="${uploadError}" class="message message-error" th:text="${uploadError}"></div>
+            </form>
+        </section>
+
+        <!-- File List Section -->
+        <section class="section files-section">
+            <h2 class="section-title">Uploaded Files</h2>
+            <div th:if="${!hasFiles}" class="empty-state">
+                <p>No files uploaded yet</p>
+            </div>
+            <ul th:if="${hasFiles}" class="file-list">
+                <li th:each="file : ${files}" class="file-item">
+                    <span th:class="'file-icon ' + ${file.iconClass}" aria-hidden="true"></span>
+                    <span class="file-name" th:text="${file.name}"></span>
+                    <span class="file-size" th:text="${file.displaySize}"></span>
+                    <form th:action="@{/delete/{id}(id=${file.id})}" method="post" class="delete-form">
+                        <button type="submit" class="btn btn-danger btn-small"
+                                th:aria-label="'Delete ' + ${file.name}">Delete</button>
+                    </form>
+                </li>
+            </ul>
+            <div th:if="${deleteSuccess}" class="message message-success" th:text="${deleteSuccess}"></div>
+            <div th:if="${deleteError}" class="message message-error" th:text="${deleteError}"></div>
+        </section>
+
+        <!-- Search Section -->
+        <section class="section search-section">
+            <h2 class="section-title">Search Documents</h2>
+            <div class="quick-prompts">
+                <button type="button" class="btn btn-secondary quick-prompt"
+                        th:data-prompt="${prompt1}"
+                        onclick="fillSearch(this)"
+                        th:disabled="${!hasFiles}"
+                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
+                    Architecture
+                </button>
+                <button type="button" class="btn btn-secondary quick-prompt"
+                        th:data-prompt="${prompt2}"
+                        onclick="fillSearch(this)"
+                        th:disabled="${!hasFiles}"
+                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
+                    Integrations
+                </button>
+                <button type="button" class="btn btn-secondary quick-prompt"
+                        th:data-prompt="${prompt3}"
+                        onclick="fillSearch(this)"
+                        th:disabled="${!hasFiles}"
+                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
+                    Technologies
+                </button>
+            </div>
+            <form th:action="@{/search}" method="post" class="search-form">
+                <div class="search-input-group">
+                    <label for="searchQuery" class="sr-only">Search Query</label>
+                    <input type="text" id="searchQuery" name="query"
+                           placeholder="Enter your question about the uploaded documents..."
+                           th:disabled="${!hasFiles}">
+                    <button type="submit" class="btn btn-primary" id="searchBtn"
+                            th:disabled="${!hasFiles}"
+                            th:title="${hasFiles ? 'Search' : 'Upload files first'}">
+                        Search
+                    </button>
+                </div>
+                <div th:if="${searchError}" class="message message-error" th:text="${searchError}"></div>
+            </form>
+        </section>
+
+        <!-- Results Section -->
+        <section class="section results-section">
+            <h2 class="section-title">Results</h2>
+            <div th:if="${!hasSearchResults}" class="empty-state">
+                <p>No searches performed yet. Upload files and ask a question to get started.</p>
+            </div>
+            <div th:if="${hasSearchResults}" class="results-list">
+                <article th:each="result : ${searchResults}" class="result-item">
+                    <div class="result-header">
+                        <span class="result-query" th:text="${result.query}"></span>
+                        <span class="result-timestamp" th:text="${result.formattedTimestamp}"></span>
+                    </div>
+                    <div class="result-response" th:utext="${result.responseHtml}"></div>
+                    <div th:if="${!result.citations.isEmpty()}" class="result-citations">
+                        <strong>Sources:</strong>
+                        <span th:each="citation, iterStat : ${result.citations}">
+                            <span th:text="${citation}"></span><span th:if="${!iterStat.last}">, </span>
+                        </span>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Gemini RAG Skin &mdash; Powered by Google Gemini</p>
+    </footer>
+
+    <script>
+        // Drag and drop handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                fileInput.files = e.dataTransfer.files;
+                updateFileList(fileInput);
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+        }
+
+        // Update selected files display
+        function updateFileList(input) {
+            const container = document.getElementById('selectedFiles');
+            container.innerHTML = '';
+            if (input.files.length > 0) {
+                const list = document.createElement('ul');
+                for (const file of input.files) {
+                    const li = document.createElement('li');
+                    li.textContent = `${file.name} (${formatSize(file.size)})`;
+                    list.appendChild(li);
+                }
+                container.appendChild(list);
+            }
+        }
+
+        // Format file size
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Fill search box with quick prompt
+        function fillSearch(button) {
+            const prompt = button.getAttribute('data-prompt');
+            document.getElementById('searchQuery').value = prompt;
+        }
+
+        // Prevent double submission
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('loading');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<project_specification>
+  <project_name>Gemini RAG Skin</project_name>
+
+  <overview>
+    A lightweight, single-page RAG (Retrieval-Augmented Generation) tool for querying project documentation using Google's Gemini File Search API. Users can upload project files (Word, PDF, TXT, MD), ask solution architecture questions via predefined prompts or custom queries, and receive grounded answers with source citations. Built entirely with Java Spring Framework, server-rendered HTML/CSS, with no database required.
+  </overview>
+
+  <technology_stack>
+    <backend>
+      <language>Java 21</language>
+      <framework>Spring Boot 3.x</framework>
+      <web_framework>Spring Web + Thymeleaf</web_framework>
+      <build_tool>Maven</build_tool>
+      <database>None (stateless, prompts stored in application.properties)</database>
+    </backend>
+    <frontend>
+      <rendering>Server-side (Thymeleaf templates)</rendering>
+      <styling>Pure HTML/CSS</styling>
+      <design_system>Minimal/Clean with auto light/dark theme (follows OS preference)</design_system>
+      <javascript>Minimal - only for essential interactions</javascript>
+    </frontend>
+    <external_api>
+      <name>Google Gemini File Search API</name>
+      <purpose>Document storage, semantic retrieval, and grounded generation</purpose>
+      <client>To be determined - research best approach (official SDK vs REST client)</client>
+    </external_api>
+    <communication>
+      <style>Traditional HTTP request/response</style>
+      <page_updates>Full page refresh after actions</page_updates>
+    </communication>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      <requirement>Java 21 JDK installed</requirement>
+      <requirement>Maven installed</requirement>
+      <requirement>Google Cloud account with Gemini API access</requirement>
+      <requirement>GEMINI_API_KEY environment variable configured</requirement>
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>65</feature_count>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="single_user">
+        <permissions>
+          - Full access to all functionality
+          - No authentication required (personal use only)
+        </permissions>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>None - single user application</method>
+      <session_timeout>None</session_timeout>
+    </authentication>
+    <validation>
+      <file_upload>
+        - Maximum file size: 50MB per file
+        - Allowed formats: .doc, .docx, .pdf, .txt, .md
+        - File type validation before upload
+      </file_upload>
+      <search>
+        - Search blocked when no files uploaded
+        - Input sanitization for queries
+      </search>
+    </validation>
+  </security_and_access_control>
+
+  <core_features>
+    <config_section>
+      - Display editable system prompt in text area
+      - Display 3 editable solution architecture prompts
+      - Save button persists changes to application.properties file
+      - Changes survive application restart
+      - Default system prompt: "You are a solution architect assistant. Answer questions based on the uploaded project documents. Provide detailed, accurate responses with references to specific sections of the uploaded files."
+      - Default prompt 1: "What is the overall architecture and key components?"
+      - Default prompt 2: "What are the integration points and external dependencies?"
+      - Default prompt 3: "What technologies and frameworks are used?"
+    </config_section>
+
+    <file_upload_section>
+      - Multi-file upload input (select multiple files at once)
+      - Drag-and-drop support for file upload area
+      - Supported formats: Word (.doc, .docx), PDF (.pdf), Plain text (.txt), Markdown (.md)
+      - File size limit: 50MB per file
+      - File type validation with clear error message for invalid types
+      - File size validation with clear error message for oversized files
+      - Upload button sends files to backend
+      - Backend immediately transmits files to Gemini File Search API
+      - Page refresh after upload completes
+      - Loading indicator during upload process
+      - Success/error inline message after upload
+    </file_upload_section>
+
+    <file_list_section>
+      - Display list of all files uploaded to current Gemini corpus
+      - Each file entry shows: filename, file type icon, file size
+      - File type icons: distinct icons for PDF, Word, TXT, MD
+      - Delete button adjacent to each file entry
+      - Delete action immediately removes file from Gemini corpus
+      - Page refresh after delete completes
+      - No confirmation dialog (immediate delete)
+      - Empty state message when no files uploaded: "No files uploaded yet"
+    </file_list_section>
+
+    <search_section>
+      - Text input field for custom queries
+      - 3 quick-action buttons for predefined prompts (auto-fill search box on click)
+      - Search button to submit query
+      - Search button disabled when no files uploaded
+      - Disabled state shows tooltip: "Upload files first"
+      - Loading indicator during search
+      - Query sent to backend with system prompt context
+      - Backend queries Gemini File Search API
+      - Page refresh with results after search completes
+    </search_section>
+
+    <results_section>
+      - Display Gemini API response with markdown rendering
+      - Show source citations (which uploaded files were used)
+      - Session history: all query/response pairs from current session
+      - Most recent result at top
+      - Clear visual separation between query and response
+      - Query text displayed above each response
+      - Timestamp for each query
+      - Scrollable results area
+      - Empty state when no searches performed yet
+    </results_section>
+
+    <corpus_management>
+      - Create fresh Gemini corpus on application startup
+      - Delete existing corpus on startup (always fresh)
+      - Store corpus ID in memory for session
+      - Clean up corpus on application shutdown
+      - All file operations use session corpus
+    </corpus_management>
+
+    <error_handling>
+      - Inline error messages for upload failures
+      - Inline error messages for search failures
+      - Inline error messages for delete failures
+      - User-friendly error messages (no technical stack traces)
+      - File too large error message
+      - Invalid file type error message
+      - Gemini API error handling with retry suggestion
+      - Network failure handling
+    </error_handling>
+  </core_features>
+
+  <ui_layout>
+    <main_structure>
+      Single page with vertical stack layout (scroll to see all sections)
+    </main_structure>
+    <section_order>
+      1. Header with application title
+      2. Config Section (collapsible or always visible)
+      3. File Upload Section
+      4. File List Section
+      5. Search Section
+      6. Results Section
+      7. Footer (optional)
+    </section_order>
+    <design_principles>
+      - Minimal/Clean aesthetic with lots of whitespace
+      - Simple borders, no heavy shadows
+      - Auto light/dark theme following OS preference
+      - Consistent spacing and typography
+      - Clear visual hierarchy
+      - Readable fonts, appropriate sizing
+    </design_principles>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      <light_theme>
+        - Background: White (#FFFFFF) and light gray (#F5F5F5)
+        - Text: Dark gray (#333333)
+        - Primary accent: Blue (#2563EB)
+        - Error: Red (#DC2626)
+        - Success: Green (#16A34A)
+        - Borders: Light gray (#E5E5E5)
+      </light_theme>
+      <dark_theme>
+        - Background: Dark gray (#1A1A1A) and darker (#0D0D0D)
+        - Text: Light gray (#E5E5E5)
+        - Primary accent: Light blue (#60A5FA)
+        - Error: Light red (#F87171)
+        - Success: Light green (#4ADE80)
+        - Borders: Dark gray (#333333)
+      </dark_theme>
+    </color_palette>
+    <typography>
+      - Primary font: System font stack (-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)
+      - Monospace for code/technical content: 'SF Mono', 'Consolas', monospace
+      - Base size: 16px
+      - Headings: Bold weight, larger sizes
+    </typography>
+    <file_type_icons>
+      - PDF: Red document icon
+      - Word (.doc, .docx): Blue document icon
+      - Text (.txt): Gray document icon
+      - Markdown (.md): Purple/teal document icon
+    </file_type_icons>
+  </design_system>
+
+  <package_structure>
+    <base_package>com.geminiragskin</base_package>
+    <feature_packages>
+      <package name="corpus">
+        - GeminiCorpusService.java (create, delete, manage corpus)
+        - CorpusConfig.java (corpus configuration)
+      </package>
+      <package name="file">
+        - FileController.java (handles /upload, /delete endpoints)
+        - FileService.java (file validation, upload to Gemini)
+        - FileInfo.java (DTO for file metadata)
+      </package>
+      <package name="search">
+        - SearchController.java (handles /search endpoint)
+        - SearchService.java (query Gemini, process results)
+        - SearchResult.java (DTO for search results)
+        - QueryHistory.java (session history storage)
+      </package>
+      <package name="config">
+        - ConfigController.java (handles /config/save endpoint)
+        - PromptConfigService.java (read/write prompts to properties)
+        - PromptConfig.java (DTO for prompt configuration)
+      </package>
+      <package name="web">
+        - MainController.java (handles / renders index.html)
+        - GlobalExceptionHandler.java (error handling)
+      </package>
+      <package name="model">
+        - Common DTOs and utility classes
+      </package>
+    </feature_packages>
+  </package_structure>
+
+  <api_endpoints_summary>
+    <main_page>
+      - GET / (renders index.html with all data)
+    </main_page>
+    <file_operations>
+      - POST /upload (multipart file upload)
+      - POST /delete/{fileId} (delete file from corpus)
+    </file_operations>
+    <search_operations>
+      - POST /search (submit query, returns results)
+    </search_operations>
+    <config_operations>
+      - POST /config/save (save prompts to application.properties)
+    </config_operations>
+  </api_endpoints_summary>
+
+  <gemini_api_integration>
+    <corpus_operations>
+      - Create corpus on startup
+      - Delete corpus on startup (fresh start)
+      - Delete corpus on shutdown (cleanup)
+    </corpus_operations>
+    <document_operations>
+      - Upload document to corpus
+      - List documents in corpus
+      - Delete document from corpus
+    </document_operations>
+    <query_operations>
+      - Generate content with retrieval tool
+      - Include system prompt in generation config
+      - Return grounded response with citations
+    </query_operations>
+    <authentication>
+      - API key from GEMINI_API_KEY environment variable
+      - Or application.properties gemini.api.key
+    </authentication>
+  </gemini_api_integration>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Project Setup</title>
+      <tasks>
+        - Initialize Spring Boot 3.x project with Maven
+        - Configure pom.xml with dependencies (Spring Web, Thymeleaf, etc.)
+        - Set up application.properties with default prompts
+        - Create package structure
+      </tasks>
+    </step>
+    <step number="2">
+      <title>Gemini API Integration</title>
+      <tasks>
+        - Research and implement Gemini API client (SDK or REST)
+        - Implement GeminiCorpusService for corpus management
+        - Test corpus create/delete operations
+        - Implement document upload/list/delete operations
+        - Implement query with retrieval operations
+      </tasks>
+    </step>
+    <step number="3">
+      <title>Core Backend Services</title>
+      <tasks>
+        - Implement FileService with validation
+        - Implement SearchService with history
+        - Implement PromptConfigService for properties file updates
+        - Add error handling and logging
+      </tasks>
+    </step>
+    <step number="4">
+      <title>Controllers</title>
+      <tasks>
+        - Implement MainController with model population
+        - Implement FileController for upload/delete
+        - Implement SearchController for queries
+        - Implement ConfigController for prompt saving
+        - Add GlobalExceptionHandler
+      </tasks>
+    </step>
+    <step number="5">
+      <title>Frontend Templates</title>
+      <tasks>
+        - Create index.html with all sections
+        - Implement CSS with light/dark theme support
+        - Add file type icons
+        - Style all components (forms, buttons, lists)
+        - Implement markdown rendering for results
+      </tasks>
+    </step>
+    <step number="6">
+      <title>Integration & Polish</title>
+      <tasks>
+        - End-to-end testing of all workflows
+        - Error handling refinement
+        - UI polish and responsive adjustments
+        - Performance optimization
+        - Documentation
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - User can upload multiple files (Word, PDF, TXT, MD) up to 50MB each
+      - Files are sent to Gemini File Search API and listed in UI
+      - User can delete files from the corpus
+      - User can search uploaded documents with custom queries
+      - User can use 3 predefined solution architecture prompts
+      - Search returns markdown-rendered results with source citations
+      - Session history shows all queries and responses
+      - Prompts are editable and persist to application.properties
+      - Fresh corpus created on each application start
+    </functionality>
+    <user_experience>
+      - Clean, minimal, modern UI design
+      - Auto light/dark theme works correctly
+      - Clear visual feedback for all actions
+      - Inline error messages are helpful and specific
+      - Page refresh flow is smooth and intuitive
+      - Search blocked until files uploaded (clear messaging)
+    </user_experience>
+    <technical_quality>
+      - Clean code organization (feature-based packages)
+      - Proper error handling throughout
+      - No hardcoded/mock data - all real Gemini API integration
+      - Properties file persistence works correctly
+      - Application starts and shuts down cleanly
+    </technical_quality>
+    <design_polish>
+      - Consistent spacing and typography
+      - File type icons display correctly
+      - Light/dark themes are visually consistent
+      - No visual glitches or overflow issues
+      - Professional, polished appearance
+    </design_polish>
+  </success_criteria>
+</project_specification>
