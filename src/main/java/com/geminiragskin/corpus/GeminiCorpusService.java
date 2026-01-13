@@ -134,38 +134,60 @@ public class GeminiCorpusService {
     }
 
     /**
-     * Uploads file content to Gemini Files API.
+     * Uploads file content to Gemini Files API using resumable upload protocol.
+     * Step 1: Start resumable upload and get upload URL
+     * Step 2: Upload file bytes to the upload URL
      */
     private String uploadToGeminiFiles(String filename, byte[] content, String mimeType) throws IOException {
         try {
-            // Use the media upload endpoint
-            String uploadUrl = "/upload/v1beta/files?key=" + apiKey;
+            WebClient uploadClient = WebClient.builder()
+                    .baseUrl("https://generativelanguage.googleapis.com")
+                    .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024))
+                    .build();
 
-            MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("file", new ByteArrayResource(content) {
-                @Override
-                public String getFilename() {
-                    return filename;
-                }
-            }).header("Content-Type", mimeType);
-
+            // Step 1: Start resumable upload
             ObjectNode metadata = objectMapper.createObjectNode();
             ObjectNode fileNode = metadata.putObject("file");
-            fileNode.put("displayName", filename);
+            fileNode.put("display_name", filename);
 
-            builder.part("metadata", metadata.toString())
-                    .header("Content-Type", "application/json");
+            var responseSpec = uploadClient.post()
+                    .uri("/upload/v1beta/files?key=" + apiKey)
+                    .header("X-Goog-Upload-Protocol", "resumable")
+                    .header("X-Goog-Upload-Command", "start")
+                    .header("X-Goog-Upload-Header-Content-Length", String.valueOf(content.length))
+                    .header("X-Goog-Upload-Header-Content-Type", mimeType)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(metadata.toString())
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
 
-            String response = webClient.post()
+            // Extract upload URL from response headers
+            String uploadUrl = responseSpec.getHeaders().getFirst("X-Goog-Upload-URL");
+            if (uploadUrl == null || uploadUrl.isEmpty()) {
+                throw new IOException("Failed to get upload URL from Gemini API response");
+            }
+
+            logger.info("Got upload URL for file: {}", filename);
+
+            // Step 2: Upload file bytes
+            String response = WebClient.create()
+                    .post()
                     .uri(uploadUrl)
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(BodyInserters.fromMultipartData(builder.build()))
+                    .header("X-Goog-Upload-Command", "upload, finalize")
+                    .header("X-Goog-Upload-Offset", "0")
+                    .header("Content-Length", String.valueOf(content.length))
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .bodyValue(content)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
             JsonNode responseJson = objectMapper.readTree(response);
-            return responseJson.path("file").path("uri").asText();
+            String fileUri = responseJson.path("file").path("uri").asText();
+            String fileName = responseJson.path("file").path("name").asText();
+            logger.info("File uploaded to Gemini successfully: {} -> {} ({})", filename, fileUri, fileName);
+            return fileUri;
 
         } catch (Exception e) {
             logger.error("Failed to upload file to Gemini: {}", filename, e);

@@ -61,39 +61,51 @@
 ### Current Feature Status
 
 - **Total Features:** 65
-- **Passing:** 0
-- **In Progress:** Feature #1 (Application starts and loads main page)
-- **Percentage Complete:** 0%
+- **Passing:** 7
+- **In Progress:** 0
+- **Percentage Complete:** 10.8%
+
+### Session 2 Summary (Coding Agent)
+
+#### Completed Features
+
+1. **Feature #1** - Application starts and loads main page ✅
+2. **Feature #2** - Config section displays editable system prompt ✅
+3. **Feature #3** - Config section displays 3 editable solution architecture prompts ✅
+4. **Feature #4** - Config save persists changes to application.properties ✅
+5. **Feature #5** - File upload accepts multiple files ✅
+6. **Feature #6** - File upload supports drag and drop ✅
+7. **Feature #7** - File upload validates file types ✅
+
+#### Key Fix: Gemini Files API Upload
+
+Fixed the file upload to use the correct Gemini Files API resumable upload protocol:
+- Step 1: POST to `/upload/v1beta/files` with `X-Goog-Upload-Protocol: resumable` header
+- Step 2: Upload file bytes to the returned upload URL with `X-Goog-Upload-Command: upload, finalize`
+
+The original implementation was using incorrect multipart form upload format.
 
 ### Next Steps for Future Agents
 
-1. **Compile and Test Application**
-   - Run `mvn compile` to verify code compiles
-   - Run `mvn spring-boot:run` to start application
-   - Navigate to http://localhost:8080/ to verify UI loads
-
-2. **Work Through Features**
+1. **Continue Feature Verification**
    - Get next feature: `feature_get_next`
    - Mark as in progress: `feature_mark_in_progress`
    - Implement/verify feature
    - Mark as passing: `feature_mark_passing`
 
-3. **Feature #1 Verification Steps**
-   - Start application
-   - Verify all sections present:
-     - Header with "Gemini RAG Skin" title
-     - Config Section (system prompt + 3 architecture prompts)
-     - File Upload Section (drag-drop area)
-     - File List Section (empty state message)
-     - Search Section (disabled until files uploaded)
-     - Results Section (empty state message)
+2. **Features to Test Next**
+   - File deletion functionality
+   - Search with predefined prompts
+   - Results display with markdown rendering
+   - Session history
 
 ### Known Issues / Notes
 
-- `mvn` command was blocked in this session - next agent should verify Maven is available
+- Application server runs on port 8080 (default)
 - GEMINI_API_KEY environment variable required for Gemini API calls
 - Application uses session-scoped beans for query history
 - Corpus is created fresh on each application startup
+- Files are uploaded to Gemini Files API and stored in memory for file list display
 
 ### Technology Stack Reference
 
