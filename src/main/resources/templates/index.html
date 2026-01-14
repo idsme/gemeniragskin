@@ -31,10 +31,18 @@
                     <textarea id="systemPrompt" name="systemPrompt" rows="4" th:text="${systemPrompt}"></textarea>
                 </div>
                 <div id="promptsContainer">
-                    <div class="form-group" th:each="prompt, iterStat : ${allPrompts}">
+                    <div class="form-group prompt-group" th:each="prompt, iterStat : ${allPrompts}">
                         <label th:for="'prompt' + ${iterStat.count}" th:text="'Prompt ' + ${iterStat.count}"></label>
-                        <input type="text" th:id="'prompt' + ${iterStat.count}"
-                               th:name="'prompt' + ${iterStat.count}" th:value="${prompt}">
+                        <div class="prompt-input-wrapper">
+                            <input type="text" th:id="'prompt' + ${iterStat.count}"
+                                   th:name="'prompt' + ${iterStat.count}" th:value="${prompt}">
+                            <button type="button" class="btn-icon btn-delete-prompt"
+                                    onclick="deletePrompt(this)"
+                                    th:aria-label="'Delete prompt ' + ${iterStat.count}"
+                                    title="Delete this prompt">
+                                🗑️
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -208,11 +216,14 @@
             const promptCount = container.querySelectorAll('.form-group').length + 1;
 
             const formGroup = document.createElement('div');
-            formGroup.className = 'form-group';
+            formGroup.className = 'form-group prompt-group';
 
             const label = document.createElement('label');
             label.setAttribute('for', 'prompt' + promptCount);
             label.textContent = 'Prompt ' + promptCount;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'prompt-input-wrapper';
 
             const input = document.createElement('input');
             input.type = 'text';
@@ -220,9 +231,54 @@
             input.name = 'prompt' + promptCount;
             input.value = '';
 
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn-icon btn-delete-prompt';
+            deleteBtn.onclick = function() { deletePrompt(this); };
+            deleteBtn.setAttribute('aria-label', 'Delete prompt ' + promptCount);
+            deleteBtn.setAttribute('title', 'Delete this prompt');
+            deleteBtn.textContent = '🗑️';
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(deleteBtn);
             formGroup.appendChild(label);
-            formGroup.appendChild(input);
+            formGroup.appendChild(wrapper);
             container.appendChild(formGroup);
+        }
+
+        // Delete prompt field
+        function deletePrompt(button) {
+            const promptGroup = button.closest('.prompt-group');
+            if (promptGroup) {
+                promptGroup.remove();
+                // Renumber remaining prompts
+                renumberPrompts();
+            }
+        }
+
+        // Renumber prompts after deletion
+        function renumberPrompts() {
+            const container = document.getElementById('promptsContainer');
+            const promptGroups = container.querySelectorAll('.prompt-group');
+
+            promptGroups.forEach((group, index) => {
+                const newNumber = index + 1;
+                const label = group.querySelector('label');
+                const input = group.querySelector('input');
+                const deleteBtn = group.querySelector('.btn-delete-prompt');
+
+                if (label) {
+                    label.textContent = 'Prompt ' + newNumber;
+                    label.setAttribute('for', 'prompt' + newNumber);
+                }
+                if (input) {
+                    input.id = 'prompt' + newNumber;
+                    input.name = 'prompt' + newNumber;
+                }
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('aria-label', 'Delete prompt ' + newNumber);
+                }
+            });
         }
 
         // Prevent double submission

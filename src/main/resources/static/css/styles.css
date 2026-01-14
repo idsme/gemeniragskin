@@ -146,6 +146,45 @@ p {
     color: var(--text-primary);
 }
 
+/* Prompt input wrapper with delete button */
+.prompt-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.prompt-input-wrapper input {
+    flex: 1;
+}
+
+/* Icon button styles */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+}
+
+.btn-icon:hover {
+    background: var(--bg-secondary);
+}
+
+.btn-icon:active {
+    transform: scale(0.95);
+}
+
+.btn-delete-prompt:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
 input[type="text"],
 textarea {
     width: 100%;

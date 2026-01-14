@@ -1,0 +1,10 @@
+Session 16 Regression Test for Feature #60
+
+This is a test document for verifying Backend Gemini API integration.
+
+Key Points:
+- The backend must correctly format requests to Gemini API
+- Search results must be returned with proper citations
+- The system should handle file uploads and searches seamlessly
+
+Test timestamp: 2026-01-14 Session 16

@@ -1,0 +1,73 @@
+### Page state
+- Page URL: http://localhost:8080/
+- Page Title: Gemini RAG Skin
+- Page Snapshot:
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Gemini RAG Skin" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Query your project documentation with AI
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Configuration" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - generic [ref=e10]: System Prompt
+          - textbox "System Prompt" [ref=e11]: You are a solution architect assistant. Answer questions based on the uploaded project documents. Provide detailed, accurate responses with references to specific sections of the uploaded files be to the point in your responses and
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - generic [ref=e14]: Prompt 1
+            - textbox "Prompt 1" [ref=e15]: "SOLUTION ARCHITECT ANALYSE - PROJECT ASSESSMENT Analyseer onderstaande projectbeschrijving vanuit solution architect perspectief. Geef korte, directe antwoorden zonder opsmuk. PROJECTBESCHRIJVING: [PLAATS HIER DE PROJECT TEKST] ANALYSE FRAMEWORK: 1. SITUATIE & PROBLEEM - Wat is de huidige situatie? - Wat is het kernprobleem? - Wat is de business impact als dit niet wordt opgelost? 2. TECHNISCHE FIT - Welke tech stack is vereist? - Past dit bij onze huidige stack/skills? - Welke kennislacunes zijn er? 3. SCOPE & COMPLEXITEIT - Wat is de technische complexiteit (low/medium/high)? - Welke afhankelijkheden zijn er (systemen/teams/derden)? - Welke risico's zie je? 4. IMPACT & INTEGRATIE - Welke bestaande systemen worden geraakt? - Wat is de impact op bestaande architectuur? - Welke migratie/transitie is nodig? 5. TIJDSINSCHATTING - Totaal aantal uren (min-max range): - Verdeling per fase (analyse/ontwikkel/test/deploy): 6. SKILL VERDELING Geef percentage verdeling: - Frontend: __% - Backend: __% - DevOps/Infra: __% - Data/Database: __% - Design/UX: __% - Testing/QA: __% - Overig: __% 7. OPLOSSINGSVOORSTEL Schets 1 primaire oplossingsrichting: - Aanpak in 3-5 bullets - Voordelen (max 3) - Nadelen/risico's (max 3) 8. FINANCIËLE ANALYSE Bij €90/uur: - Totale projectwaarde: €____ - Geschatte kosten (60-70% voor resources): €____ - Netto winstmarge (30-40%): €____ - Winstpercentage: ___% 9. GO/NO-GO INDICATOREN ✓ Positief: ✗ Negatief: 10. CONCLUSIE - Is dit project interessant? (JA/NEE/MISSCHIEN) - In 1 zin waarom:"
+          - generic [ref=e16]:
+            - generic [ref=e17]: Prompt 2
+            - textbox "Prompt 2" [ref=e18]: What are the integration points and external dependencies?
+          - generic [ref=e19]:
+            - generic [ref=e20]: Prompt 3
+            - textbox "Prompt 3" [ref=e21]: What technologies and frameworks are used?
+          - generic [ref=e22]:
+            - generic [ref=e23]: Prompt 4
+            - textbox "Prompt 4" [ref=e24]: What are the security considerations and best practices?
+          - generic [ref=e25]:
+            - generic [ref=e26]: Prompt 5
+            - textbox "Prompt 5" [ref=e27]: What is the deployment strategy and infrastructure requirements?
+          - generic [ref=e28]:
+            - generic [ref=e29]: Prompt 6
+            - textbox "Prompt 6" [ref=e30]: blah
+          - generic [ref=e31]:
+            - generic [ref=e32]: Prompt 7
+            - textbox "Prompt 7" [ref=e33]: What are the monitoring and observability requirements?
+        - generic [ref=e34]:
+          - button "Add Prompt" [ref=e35] [cursor=pointer]
+          - button "Save Configuration" [ref=e36] [cursor=pointer]
+    - generic [ref=e37]:
+      - heading "Upload Files" [level=2] [ref=e38]
+      - generic [ref=e39]:
+        - generic [ref=e40] [cursor=pointer]:
+          - generic [ref=e41]: 📁
+          - paragraph [ref=e42]: Drag and drop files here, or click to select
+          - paragraph [ref=e43]: "Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)"
+        - button "Upload Files" [ref=e45] [cursor=pointer]
+    - generic [ref=e46]:
+      - heading "Uploaded Files" [level=2] [ref=e47]
+      - paragraph [ref=e49]: No files uploaded yet
+    - generic [ref=e50]:
+      - heading "Search Documents" [level=2] [ref=e51]
+      - generic [ref=e52]:
+        - button "Quick 1" [disabled] [ref=e53]
+        - button "Quick 2" [disabled] [ref=e54]
+        - button "Quick 3" [disabled] [ref=e55]
+        - button "Quick 4" [disabled] [ref=e56]
+        - button "Quick 5" [disabled] [ref=e57]
+        - button "Quick 6" [disabled] [ref=e58]
+        - button "Quick 7" [disabled] [ref=e59]
+      - generic [ref=e61]:
+        - generic [ref=e62]: Search Query
+        - textbox "Search Query" [disabled] [ref=e63]:
+          - /placeholder: Enter your question about the uploaded documents...
+        - button "Search" [disabled] [ref=e64]
+    - generic [ref=e65]:
+      - heading "Results" [level=2] [ref=e66]
+      - paragraph [ref=e68]: No searches performed yet. Upload files and ask a question to get started.
+  - contentinfo [ref=e69]:
+    - paragraph [ref=e70]: Gemini RAG Skin — Powered by Google Gemini
+```
