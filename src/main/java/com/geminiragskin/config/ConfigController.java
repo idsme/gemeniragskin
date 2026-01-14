@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Controller for handling prompt configuration requests.
  */
@@ -22,27 +26,41 @@ public class ConfigController {
     }
 
     /**
-     * Handles saving prompt configuration.
+     * Handles saving prompt configuration with support for dynamic number of prompts.
      *
      * @param systemPrompt The system prompt
-     * @param prompt1      First architecture prompt
-     * @param prompt2      Second architecture prompt
-     * @param prompt3      Third architecture prompt
+     * @param allParams All request parameters (to capture dynamic prompt fields)
      * @param redirectAttributes For adding flash messages
      * @return Redirect to main page
      */
     @PostMapping("/config/save")
     public String saveConfig(
             @RequestParam("systemPrompt") String systemPrompt,
-            @RequestParam("prompt1") String prompt1,
-            @RequestParam("prompt2") String prompt2,
-            @RequestParam("prompt3") String prompt3,
+            @RequestParam Map<String, String> allParams,
             RedirectAttributes redirectAttributes) {
 
         try {
-            promptConfigService.savePrompts(systemPrompt, prompt1, prompt2, prompt3);
-            redirectAttributes.addFlashAttribute("configSuccess", "Configuration saved successfully!");
-            logger.info("Configuration saved successfully");
+            // Extract all architecture prompts (prompt1, prompt2, prompt3, ...)
+            List<String> architecturePrompts = new ArrayList<>();
+            int i = 1;
+            while (allParams.containsKey("prompt" + i)) {
+                String prompt = allParams.get("prompt" + i);
+                // Only add non-empty prompts
+                if (prompt != null && !prompt.trim().isEmpty()) {
+                    architecturePrompts.add(prompt);
+                }
+                i++;
+            }
+
+            // Ensure at least 3 prompts exist (maintain backward compatibility)
+            while (architecturePrompts.size() < 3) {
+                architecturePrompts.add("");
+            }
+
+            promptConfigService.savePrompts(systemPrompt, architecturePrompts);
+            redirectAttributes.addFlashAttribute("configSuccess",
+                "Configuration saved successfully! (" + architecturePrompts.size() + " prompts)");
+            logger.info("Configuration saved successfully with {} architecture prompts", architecturePrompts.size());
         } catch (Exception e) {
             logger.error("Failed to save configuration", e);
             redirectAttributes.addFlashAttribute("configError", "Failed to save configuration: " + e.getMessage());

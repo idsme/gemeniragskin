@@ -43,6 +43,9 @@ public class MainController {
         model.addAttribute("prompt2", promptConfigService.getPrompt2());
         model.addAttribute("prompt3", promptConfigService.getPrompt3());
 
+        // Add all prompts as a list for dynamic rendering
+        model.addAttribute("allPrompts", promptConfigService.getAllPrompts());
+
         // File list data
         model.addAttribute("files", fileService.listFiles());
         model.addAttribute("hasFiles", fileService.hasFiles());

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Service for managing prompt configuration.
@@ -49,6 +49,42 @@ public class PromptConfigService {
     }
 
     /**
+     * Gets all architecture prompts as a list.
+     * Reads from application.properties to get the current count of prompts.
+     *
+     * @return List of all architecture prompts
+     */
+    public List<String> getAllPrompts() {
+        List<String> prompts = new ArrayList<>();
+        Path propertiesPath = findPropertiesFile();
+
+        if (propertiesPath != null && Files.exists(propertiesPath)) {
+            Properties props = new Properties();
+            try (InputStream is = Files.newInputStream(propertiesPath)) {
+                props.load(is);
+
+                // Load all prompts with pattern prompt.architecture.N
+                int i = 1;
+                while (props.containsKey("prompt.architecture." + i)) {
+                    prompts.add(props.getProperty("prompt.architecture." + i));
+                    i++;
+                }
+            } catch (IOException e) {
+                logger.error("Failed to read prompts from properties file", e);
+            }
+        }
+
+        // Fallback to in-memory values if file reading fails
+        if (prompts.isEmpty()) {
+            prompts.add(prompt1);
+            prompts.add(prompt2);
+            prompts.add(prompt3);
+        }
+
+        return prompts;
+    }
+
+    /**
      * Saves prompt configuration to the application.properties file.
      *
      * @param system  The system prompt
@@ -58,11 +94,27 @@ public class PromptConfigService {
      * @throws IOException if there's an error writing to the file
      */
     public void savePrompts(String system, String prompt1, String prompt2, String prompt3) throws IOException {
+        List<String> promptList = new ArrayList<>();
+        promptList.add(prompt1);
+        promptList.add(prompt2);
+        promptList.add(prompt3);
+        savePrompts(system, promptList);
+    }
+
+    /**
+     * Saves prompt configuration to the application.properties file.
+     * Supports dynamic number of prompts.
+     *
+     * @param system The system prompt
+     * @param architecturePrompts List of architecture prompts
+     * @throws IOException if there's an error writing to the file
+     */
+    public void savePrompts(String system, List<String> architecturePrompts) throws IOException {
         // Update in-memory values
         this.systemPrompt = system;
-        this.prompt1 = prompt1;
-        this.prompt2 = prompt2;
-        this.prompt3 = prompt3;
+        if (architecturePrompts.size() > 0) this.prompt1 = architecturePrompts.get(0);
+        if (architecturePrompts.size() > 1) this.prompt2 = architecturePrompts.get(1);
+        if (architecturePrompts.size() > 2) this.prompt3 = architecturePrompts.get(2);
 
         // Find the application.properties file
         Path propertiesPath = findPropertiesFile();
@@ -75,18 +127,21 @@ public class PromptConfigService {
                 props.load(is);
             }
 
+            // Remove all existing architecture prompts
+            props.keySet().removeIf(key -> key.toString().startsWith("prompt.architecture."));
+
             // Update prompt properties
             props.setProperty("prompt.system", system);
-            props.setProperty("prompt.architecture.1", prompt1);
-            props.setProperty("prompt.architecture.2", prompt2);
-            props.setProperty("prompt.architecture.3", prompt3);
+            for (int i = 0; i < architecturePrompts.size(); i++) {
+                props.setProperty("prompt.architecture." + (i + 1), architecturePrompts.get(i));
+            }
 
             // Write back to file
             try (OutputStream os = Files.newOutputStream(propertiesPath)) {
                 props.store(os, "Gemini RAG Skin Application Configuration");
             }
 
-            logger.info("Prompts saved successfully to {}", propertiesPath);
+            logger.info("Prompts saved successfully to {} ({} architecture prompts)", propertiesPath, architecturePrompts.size());
         } else {
             logger.warn("Could not find application.properties file for persistent storage");
             // Values are still updated in memory for the current session

@@ -25,24 +25,20 @@
         <!-- Config Section -->
         <section class="section config-section">
             <h2 class="section-title">Configuration</h2>
-            <form th:action="@{/config/save}" method="post" class="config-form">
+            <form th:action="@{/config/save}" method="post" class="config-form" id="configForm">
                 <div class="form-group">
                     <label for="systemPrompt">System Prompt</label>
                     <textarea id="systemPrompt" name="systemPrompt" rows="4" th:text="${systemPrompt}"></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="prompt1">Prompt 1</label>
-                    <input type="text" id="prompt1" name="prompt1" th:value="${prompt1}">
-                </div>
-                <div class="form-group">
-                    <label for="prompt2">Prompt 2</label>
-                    <input type="text" id="prompt2" name="prompt2" th:value="${prompt2}">
-                </div>
-                <div class="form-group">
-                    <label for="prompt3">Prompt 3</label>
-                    <input type="text" id="prompt3" name="prompt3" th:value="${prompt3}">
+                <div id="promptsContainer">
+                    <div class="form-group" th:each="prompt, iterStat : ${allPrompts}">
+                        <label th:for="'prompt' + ${iterStat.count}" th:text="'Prompt ' + ${iterStat.count}"></label>
+                        <input type="text" th:id="'prompt' + ${iterStat.count}"
+                               th:name="'prompt' + ${iterStat.count}" th:value="${prompt}">
+                    </div>
                 </div>
                 <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="addNewPrompt()">Add Prompt</button>
                     <button type="submit" class="btn btn-primary">Save Configuration</button>
                 </div>
                 <div th:if="${configSuccess}" class="message message-success" th:text="${configSuccess}"></div>
@@ -98,25 +94,12 @@
             <h2 class="section-title">Search Documents</h2>
             <div class="quick-prompts">
                 <button type="button" class="btn btn-secondary quick-prompt"
-                        th:data-prompt="${prompt1}"
+                        th:each="prompt, iterStat : ${allPrompts}"
+                        th:data-prompt="${prompt}"
                         onclick="fillSearch(this)"
                         th:disabled="${!hasFiles}"
-                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
-                    Architecture
-                </button>
-                <button type="button" class="btn btn-secondary quick-prompt"
-                        th:data-prompt="${prompt2}"
-                        onclick="fillSearch(this)"
-                        th:disabled="${!hasFiles}"
-                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
-                    Integrations
-                </button>
-                <button type="button" class="btn btn-secondary quick-prompt"
-                        th:data-prompt="${prompt3}"
-                        onclick="fillSearch(this)"
-                        th:disabled="${!hasFiles}"
-                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}">
-                    Technologies
+                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}"
+                        th:text="'Quick ' + ${iterStat.count}">
                 </button>
             </div>
             <form th:action="@{/search}" method="post" class="search-form">
@@ -217,6 +200,29 @@
         function fillSearch(button) {
             const prompt = button.getAttribute('data-prompt');
             document.getElementById('searchQuery').value = prompt;
+        }
+
+        // Add new prompt field
+        function addNewPrompt() {
+            const container = document.getElementById('promptsContainer');
+            const promptCount = container.querySelectorAll('.form-group').length + 1;
+
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.setAttribute('for', 'prompt' + promptCount);
+            label.textContent = 'Prompt ' + promptCount;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'prompt' + promptCount;
+            input.name = 'prompt' + promptCount;
+            input.value = '';
+
+            formGroup.appendChild(label);
+            formGroup.appendChild(input);
+            container.appendChild(formGroup);
         }
 
         // Prevent double submission
