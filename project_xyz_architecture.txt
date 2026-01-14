@@ -1,0 +1,12 @@
+Project XYZ Architecture Document
+
+This document describes the architecture of Project XYZ, a microservices-based platform.
+
+Key Components:
+1. API Gateway - Entry point for all client requests
+2. User Service - Handles authentication and user management
+3. Order Service - Manages orders and transactions
+4. Notification Service - Sends emails and push notifications
+5. Database Layer - PostgreSQL for persistent storage
+
+The Project XYZ Architecture uses event-driven communication between services.

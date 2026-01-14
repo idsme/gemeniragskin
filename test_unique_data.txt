@@ -1,0 +1,5 @@
+UNIQUE_TEST_DATA_789
+
+This is a test document containing unique verification data.
+The special code is UNIQUE_TEST_DATA_789 for testing purposes.
+This project implements a RAG (Retrieval-Augmented Generation) system.
