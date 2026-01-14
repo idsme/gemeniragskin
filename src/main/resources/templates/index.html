@@ -26,10 +26,39 @@
         <section class="section config-section">
             <h2 class="section-title">Configuration</h2>
             <form th:action="@{/config/save}" method="post" class="config-form" id="configForm">
-                <div class="form-group">
-                    <label for="systemPrompt">System Prompt</label>
-                    <textarea id="systemPrompt" name="systemPrompt" rows="4" th:text="${systemPrompt}"></textarea>
+                <!-- System Prompts Section -->
+                <h3 class="subsection-title">System Prompts</h3>
+                <div id="systemPromptsContainer">
+                    <div class="form-group system-prompt-group" th:each="systemPrompt, iterStat : ${allSystemPrompts}">
+                        <div class="system-prompt-header">
+                            <input type="radio"
+                                   th:id="'systemPromptRadio' + ${iterStat.count}"
+                                   name="selectedSystemPrompt"
+                                   th:value="${iterStat.count}"
+                                   th:checked="${iterStat.count == selectedSystemPromptIndex}"
+                                   th:aria-label="'Select system prompt ' + ${iterStat.count}">
+                            <label th:for="'systemPromptRadio' + ${iterStat.count}"
+                                   class="radio-label"
+                                   th:text="'System Prompt ' + ${iterStat.count}"></label>
+                            <button type="button" class="btn-icon btn-delete-system-prompt"
+                                    onclick="deleteSystemPrompt(this)"
+                                    th:aria-label="'Delete system prompt ' + ${iterStat.count}"
+                                    title="Delete this system prompt">
+                                🗑️
+                            </button>
+                        </div>
+                        <textarea th:id="'systemPrompt' + ${iterStat.count}"
+                                  th:name="'systemPrompt' + ${iterStat.count}"
+                                  rows="4"
+                                  th:text="${systemPrompt}"></textarea>
+                    </div>
                 </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="addNewSystemPrompt()">Add System Prompt</button>
+                </div>
+
+                <!-- Architecture Prompts Section -->
+                <h3 class="subsection-title">Architecture Prompts</h3>
                 <div id="promptsContainer">
                     <div class="form-group prompt-group" th:each="prompt, iterStat : ${allPrompts}">
                         <label th:for="'prompt' + ${iterStat.count}" th:text="'Prompt ' + ${iterStat.count}"></label>
@@ -46,7 +75,7 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="addNewPrompt()">Add Prompt</button>
+                    <button type="button" class="btn btn-secondary" onclick="addNewPrompt()">Add Architecture Prompt</button>
                     <button type="submit" class="btn btn-primary">Save Configuration</button>
                 </div>
                 <div th:if="${configSuccess}" class="message message-success" th:text="${configSuccess}"></div>
@@ -210,7 +239,115 @@
             document.getElementById('searchQuery').value = prompt;
         }
 
-        // Add new prompt field
+        // Add new system prompt field
+        function addNewSystemPrompt() {
+            const container = document.getElementById('systemPromptsContainer');
+            const promptCount = container.querySelectorAll('.form-group').length + 1;
+
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group system-prompt-group';
+
+            const header = document.createElement('div');
+            header.className = 'system-prompt-header';
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.id = 'systemPromptRadio' + promptCount;
+            radio.name = 'selectedSystemPrompt';
+            radio.value = promptCount;
+            radio.setAttribute('aria-label', 'Select system prompt ' + promptCount);
+
+            const label = document.createElement('label');
+            label.setAttribute('for', 'systemPromptRadio' + promptCount);
+            label.className = 'radio-label';
+            label.textContent = 'System Prompt ' + promptCount;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn-icon btn-delete-system-prompt';
+            deleteBtn.onclick = function() { deleteSystemPrompt(this); };
+            deleteBtn.setAttribute('aria-label', 'Delete system prompt ' + promptCount);
+            deleteBtn.setAttribute('title', 'Delete this system prompt');
+            deleteBtn.textContent = '🗑️';
+
+            header.appendChild(radio);
+            header.appendChild(label);
+            header.appendChild(deleteBtn);
+
+            const textarea = document.createElement('textarea');
+            textarea.id = 'systemPrompt' + promptCount;
+            textarea.name = 'systemPrompt' + promptCount;
+            textarea.rows = 4;
+            textarea.value = '';
+
+            formGroup.appendChild(header);
+            formGroup.appendChild(textarea);
+            container.appendChild(formGroup);
+        }
+
+        // Delete system prompt field
+        function deleteSystemPrompt(button) {
+            const container = document.getElementById('systemPromptsContainer');
+            const promptGroup = button.closest('.system-prompt-group');
+
+            // Don't allow deletion if it's the only system prompt
+            if (container.querySelectorAll('.system-prompt-group').length <= 1) {
+                alert('You must have at least one system prompt.');
+                return;
+            }
+
+            if (promptGroup) {
+                // Check if this is the selected prompt
+                const radio = promptGroup.querySelector('input[type="radio"]');
+                const wasSelected = radio && radio.checked;
+
+                promptGroup.remove();
+
+                // Renumber remaining prompts
+                renumberSystemPrompts();
+
+                // If the deleted prompt was selected, select the first one
+                if (wasSelected) {
+                    const firstRadio = container.querySelector('input[type="radio"]');
+                    if (firstRadio) {
+                        firstRadio.checked = true;
+                    }
+                }
+            }
+        }
+
+        // Renumber system prompts after deletion
+        function renumberSystemPrompts() {
+            const container = document.getElementById('systemPromptsContainer');
+            const promptGroups = container.querySelectorAll('.system-prompt-group');
+
+            promptGroups.forEach((group, index) => {
+                const newNumber = index + 1;
+                const radio = group.querySelector('input[type="radio"]');
+                const label = group.querySelector('.radio-label');
+                const textarea = group.querySelector('textarea');
+                const deleteBtn = group.querySelector('.btn-delete-system-prompt');
+
+                if (radio) {
+                    radio.id = 'systemPromptRadio' + newNumber;
+                    radio.value = newNumber;
+                    radio.setAttribute('aria-label', 'Select system prompt ' + newNumber);
+                }
+                if (label) {
+                    label.textContent = 'System Prompt ' + newNumber;
+                    label.setAttribute('for', 'systemPromptRadio' + newNumber);
+                }
+                if (textarea) {
+                    textarea.id = 'systemPrompt' + newNumber;
+                    textarea.name = 'systemPrompt' + newNumber;
+                }
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('aria-label', 'Delete system prompt ' + newNumber);
+                }
+            });
+        }
+
+        // Add new architecture prompt field
         function addNewPrompt() {
             const container = document.getElementById('promptsContainer');
             const promptCount = container.querySelectorAll('.form-group').length + 1;
@@ -246,7 +383,7 @@
             container.appendChild(formGroup);
         }
 
-        // Delete prompt field
+        // Delete architecture prompt field
         function deletePrompt(button) {
             const promptGroup = button.closest('.prompt-group');
             if (promptGroup) {
@@ -256,7 +393,7 @@
             }
         }
 
-        // Renumber prompts after deletion
+        // Renumber architecture prompts after deletion
         function renumberPrompts() {
             const container = document.getElementById('promptsContainer');
             const promptGroups = container.querySelectorAll('.prompt-group');

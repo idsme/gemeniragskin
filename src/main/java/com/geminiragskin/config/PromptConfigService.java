@@ -32,6 +32,10 @@ public class PromptConfigService {
     @Value("${prompt.architecture.3}")
     private String prompt3;
 
+    // Default selected system prompt index (1-based)
+    @Value("${prompt.system.selected:1}")
+    private int selectedSystemPromptIndex;
+
     public String getSystemPrompt() {
         return systemPrompt;
     }
@@ -46,6 +50,62 @@ public class PromptConfigService {
 
     public String getPrompt3() {
         return prompt3;
+    }
+
+    public int getSelectedSystemPromptIndex() {
+        return selectedSystemPromptIndex;
+    }
+
+    /**
+     * Gets all system prompts as a list.
+     * Reads from application.properties to get all system prompts.
+     *
+     * @return List of all system prompts
+     */
+    public List<String> getAllSystemPrompts() {
+        List<String> prompts = new ArrayList<>();
+        Path propertiesPath = findPropertiesFile();
+
+        if (propertiesPath != null && Files.exists(propertiesPath)) {
+            Properties props = new Properties();
+            try (InputStream is = Files.newInputStream(propertiesPath)) {
+                props.load(is);
+
+                // Load all system prompts with pattern prompt.system.N (starting from 1)
+                int i = 1;
+                while (props.containsKey("prompt.system." + i)) {
+                    prompts.add(props.getProperty("prompt.system." + i));
+                    i++;
+                }
+            } catch (IOException e) {
+                logger.error("Failed to read system prompts from properties file", e);
+            }
+        }
+
+        // Fallback to single system prompt if no numbered prompts exist
+        if (prompts.isEmpty()) {
+            prompts.add(systemPrompt);
+        }
+
+        return prompts;
+    }
+
+    /**
+     * Gets the currently selected system prompt based on the selected index.
+     *
+     * @return The active system prompt text
+     */
+    public String getActiveSystemPrompt() {
+        List<String> systemPrompts = getAllSystemPrompts();
+        int index = selectedSystemPromptIndex - 1; // Convert to 0-based index
+
+        // Ensure index is within bounds
+        if (index >= 0 && index < systemPrompts.size()) {
+            return systemPrompts.get(index);
+        }
+
+        // Fallback to first prompt or default
+        return systemPrompts.isEmpty() ? systemPrompt : systemPrompts.get(0);
     }
 
     /**
@@ -103,15 +163,19 @@ public class PromptConfigService {
 
     /**
      * Saves prompt configuration to the application.properties file.
-     * Supports dynamic number of prompts.
+     * Supports dynamic number of prompts and multiple system prompts.
      *
-     * @param system The system prompt
+     * @param systemPrompts List of system prompts
+     * @param selectedIndex The selected system prompt index (1-based)
      * @param architecturePrompts List of architecture prompts
      * @throws IOException if there's an error writing to the file
      */
-    public void savePrompts(String system, List<String> architecturePrompts) throws IOException {
+    public void savePrompts(List<String> systemPrompts, int selectedIndex, List<String> architecturePrompts) throws IOException {
         // Update in-memory values
-        this.systemPrompt = system;
+        if (!systemPrompts.isEmpty()) {
+            this.systemPrompt = systemPrompts.get(0);
+        }
+        this.selectedSystemPromptIndex = selectedIndex;
         if (architecturePrompts.size() > 0) this.prompt1 = architecturePrompts.get(0);
         if (architecturePrompts.size() > 1) this.prompt2 = architecturePrompts.get(1);
         if (architecturePrompts.size() > 2) this.prompt3 = architecturePrompts.get(2);
@@ -127,11 +191,20 @@ public class PromptConfigService {
                 props.load(is);
             }
 
-            // Remove all existing architecture prompts
-            props.keySet().removeIf(key -> key.toString().startsWith("prompt.architecture."));
+            // Remove all existing system and architecture prompts
+            props.keySet().removeIf(key -> {
+                String k = key.toString();
+                return k.startsWith("prompt.architecture.") || k.startsWith("prompt.system.");
+            });
 
-            // Update prompt properties
-            props.setProperty("prompt.system", system);
+            // Update system prompt properties
+            props.setProperty("prompt.system", systemPrompts.isEmpty() ? "" : systemPrompts.get(0));
+            for (int i = 0; i < systemPrompts.size(); i++) {
+                props.setProperty("prompt.system." + (i + 1), systemPrompts.get(i));
+            }
+            props.setProperty("prompt.system.selected", String.valueOf(selectedIndex));
+
+            // Update architecture prompt properties
             for (int i = 0; i < architecturePrompts.size(); i++) {
                 props.setProperty("prompt.architecture." + (i + 1), architecturePrompts.get(i));
             }
@@ -141,11 +214,28 @@ public class PromptConfigService {
                 props.store(os, "Gemini RAG Skin Application Configuration");
             }
 
-            logger.info("Prompts saved successfully to {} ({} architecture prompts)", propertiesPath, architecturePrompts.size());
+            logger.info("Prompts saved successfully to {} ({} system prompts, {} architecture prompts, selected: {})",
+                propertiesPath, systemPrompts.size(), architecturePrompts.size(), selectedIndex);
         } else {
             logger.warn("Could not find application.properties file for persistent storage");
             // Values are still updated in memory for the current session
         }
+    }
+
+    /**
+     * Saves prompt configuration to the application.properties file.
+     * Supports dynamic number of prompts.
+     * This is a backward-compatible method that uses a single system prompt.
+     *
+     * @param system The system prompt
+     * @param architecturePrompts List of architecture prompts
+     * @throws IOException if there's an error writing to the file
+     */
+    public void savePrompts(String system, List<String> architecturePrompts) throws IOException {
+        // Convert single system prompt to list
+        List<String> systemPrompts = new ArrayList<>();
+        systemPrompts.add(system);
+        savePrompts(systemPrompts, 1, architecturePrompts);
     }
 
     private Path findPropertiesFile() {

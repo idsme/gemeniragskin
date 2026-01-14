@@ -38,6 +38,7 @@ public class SearchService {
 
     /**
      * Performs a search query against the uploaded documents.
+     * Uses the currently selected system prompt.
      *
      * @param query The user's search query
      * @return SearchResult containing the response and citations
@@ -48,7 +49,8 @@ public class SearchService {
             throw new IllegalArgumentException("Search query cannot be empty");
         }
 
-        String systemPrompt = promptConfigService.getSystemPrompt();
+        // Use the active (selected) system prompt
+        String systemPrompt = promptConfigService.getActiveSystemPrompt();
         SearchResult result = geminiCorpusService.search(query, systemPrompt);
 
         // Render markdown to HTML
@@ -58,7 +60,9 @@ public class SearchService {
         // Add to history
         queryHistory.addResult(result);
 
-        logger.info("Search completed for query: {}", query.substring(0, Math.min(50, query.length())));
+        logger.info("Search completed for query: {} using system prompt index: {}",
+            query.substring(0, Math.min(50, query.length())),
+            promptConfigService.getSelectedSystemPromptIndex());
         return result;
     }
 

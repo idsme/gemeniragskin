@@ -37,8 +37,12 @@ public class MainController {
      */
     @GetMapping("/")
     public String index(Model model) {
-        // Config section data
+        // Config section data - system prompts
         model.addAttribute("systemPrompt", promptConfigService.getSystemPrompt());
+        model.addAttribute("allSystemPrompts", promptConfigService.getAllSystemPrompts());
+        model.addAttribute("selectedSystemPromptIndex", promptConfigService.getSelectedSystemPromptIndex());
+
+        // Config section data - architecture prompts
         model.addAttribute("prompt1", promptConfigService.getPrompt1());
         model.addAttribute("prompt2", promptConfigService.getPrompt2());
         model.addAttribute("prompt3", promptConfigService.getPrompt3());

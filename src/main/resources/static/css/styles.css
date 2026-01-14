@@ -181,8 +181,51 @@ p {
     transform: scale(0.95);
 }
 
-.btn-delete-prompt:hover {
+.btn-delete-prompt:hover,
+.btn-delete-system-prompt:hover {
     background: rgba(220, 38, 38, 0.1);
+}
+
+/* System prompt specific styles */
+.subsection-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.system-prompt-group {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.system-prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.system-prompt-header input[type="radio"] {
+    width: auto;
+    cursor: pointer;
+    margin: 0;
+}
+
+.radio-label {
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+}
+
+.system-prompt-group textarea {
+    margin: 0;
 }
 
 input[type="text"],
