@@ -1,0 +1,93 @@
+### Page state
+- Page URL: http://localhost:8080/
+- Page Title: Gemini RAG Skin
+- Page Snapshot:
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Gemini RAG Skin" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Query your project documentation with AI
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Configuration" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - heading "System Prompts" [level=3] [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - radio "Select system prompt 1" [checked] [ref=e13] [cursor=pointer]
+            - generic [ref=e14] [cursor=pointer]: System Prompt 1
+            - button "Delete system prompt 1" [ref=e15] [cursor=pointer]: 🗑️
+          - textbox [ref=e16]: You are a technical documentation expert. Focus on code examples, API references, and implementation details. Provide concise, actionable responses with code snippets when relevant.
+        - button "Add System Prompt" [ref=e18] [cursor=pointer]
+        - heading "Architecture Prompts" [level=3] [ref=e19]
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]: Prompt 1
+            - generic [ref=e23]:
+              - textbox "Prompt 1" [ref=e24]: "SOLUTION ARCHITECT ANALYSE - PROJECT ASSESSMENT Analyseer onderstaande projectbeschrijving vanuit solution architect perspectief. Geef korte, directe antwoorden zonder opsmuk. PROJECTBESCHRIJVING: [PLAATS HIER DE PROJECT TEKST] ANALYSE FRAMEWORK: 1. SITUATIE & PROBLEEM - Wat is de huidige situatie? - Wat is het kernprobleem? - Wat is de business impact als dit niet wordt opgelost? 2. TECHNISCHE FIT - Welke tech stack is vereist? - Past dit bij onze huidige stack/skills? - Welke kennislacunes zijn er? 3. SCOPE & COMPLEXITEIT - Wat is de technische complexiteit (low/medium/high)? - Welke afhankelijkheden zijn er (systemen/teams/derden)? - Welke risico's zie je? 4. IMPACT & INTEGRATIE - Welke bestaande systemen worden geraakt? - Wat is de impact op bestaande architectuur? - Welke migratie/transitie is nodig? 5. TIJDSINSCHATTING - Totaal aantal uren (min-max range): - Verdeling per fase (analyse/ontwikkel/test/deploy): 6. SKILL VERDELING Geef percentage verdeling: - Frontend: __% - Backend: __% - DevOps/Infra: __% - Data/Database: __% - Design/UX: __% - Testing/QA: __% - Overig: __% 7. OPLOSSINGSVOORSTEL Schets 1 primaire oplossingsrichting: - Aanpak in 3-5 bullets - Voordelen (max 3) - Nadelen/risico's (max 3) 8. FINANCIËLE ANALYSE Bij €90/uur: - Totale projectwaarde: €____ - Geschatte kosten (60-70% voor resources): €____ - Netto winstmarge (30-40%): €____ - Winstpercentage: ___% 9. GO/NO-GO INDICATOREN ✓ Positief: ✗ Negatief: 10. CONCLUSIE - Is dit project interessant? (JA/NEE/MISSCHIEN) - In 1 zin waarom:"
+              - button "Delete prompt 1" [ref=e25] [cursor=pointer]: 🗑️
+          - generic [ref=e26]:
+            - generic [ref=e27]: Prompt 2
+            - generic [ref=e28]:
+              - textbox "Prompt 2" [ref=e29]: What are the integration points and external dependencies?
+              - button "Delete prompt 2" [ref=e30] [cursor=pointer]: 🗑️
+          - generic [ref=e31]:
+            - generic [ref=e32]: Prompt 3
+            - generic [ref=e33]:
+              - textbox "Prompt 3" [ref=e34]: What technologies and frameworks are used?
+              - button "Delete prompt 3" [ref=e35] [cursor=pointer]: 🗑️
+          - generic [ref=e36]:
+            - generic [ref=e37]: Prompt 4
+            - generic [ref=e38]:
+              - textbox "Prompt 4" [ref=e39]: What are the security considerations and best practices?
+              - button "Delete prompt 4" [ref=e40] [cursor=pointer]: 🗑️
+          - generic [ref=e41]:
+            - generic [ref=e42]: Prompt 5
+            - generic [ref=e43]:
+              - textbox "Prompt 5" [ref=e44]: What is the deployment strategy and infrastructure requirements?
+              - button "Delete prompt 5" [ref=e45] [cursor=pointer]: 🗑️
+          - generic [ref=e46]:
+            - generic [ref=e47]: Prompt 6
+            - generic [ref=e48]:
+              - textbox "Prompt 6" [ref=e49]: What are the monitoring and observability requirements?
+              - button "Delete prompt 6" [ref=e50] [cursor=pointer]: 🗑️
+        - generic [ref=e51]:
+          - button "Add Architecture Prompt" [ref=e52] [cursor=pointer]
+          - button "Save Configuration" [ref=e53] [cursor=pointer]
+    - generic [ref=e54]:
+      - heading "Upload Files" [level=2] [ref=e55]
+      - generic [ref=e56]:
+        - generic [ref=e57] [cursor=pointer]:
+          - generic [ref=e58]: 📁
+          - paragraph [ref=e59]: Drag and drop files here, or click to select
+          - paragraph [ref=e60]: "Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)"
+        - button "Upload Files" [ref=e62] [cursor=pointer]
+        - generic [ref=e63]: "File uploaded successfully: test_pdf_regression.pdf"
+    - generic [ref=e64]:
+      - heading "Uploaded Files" [level=2] [ref=e65]
+      - list [ref=e66]:
+        - listitem [ref=e67]:
+          - generic [ref=e68]: 📕
+          - generic [ref=e69]: test_pdf_regression.pdf
+          - generic [ref=e70]: 139 B
+          - button "Delete test_pdf_regression.pdf" [ref=e72] [cursor=pointer]: Delete
+    - generic [ref=e73]:
+      - heading "Search Documents" [level=2] [ref=e74]
+      - generic [ref=e75]:
+        - button "Quick 1" [ref=e76] [cursor=pointer]
+        - button "Quick 2" [ref=e77] [cursor=pointer]
+        - button "Quick 3" [ref=e78] [cursor=pointer]
+        - button "Quick 4" [ref=e79] [cursor=pointer]
+        - button "Quick 5" [ref=e80] [cursor=pointer]
+        - button "Quick 6" [ref=e81] [cursor=pointer]
+      - generic [ref=e83]:
+        - generic [ref=e84]: Search Query
+        - textbox "Search Query" [ref=e85]:
+          - /placeholder: Enter your question about the uploaded documents...
+        - button "Search" [ref=e86] [cursor=pointer]
+    - generic [ref=e87]:
+      - heading "Results" [level=2] [ref=e88]
+      - paragraph [ref=e90]: No searches performed yet. Upload files and ask a question to get started.
+  - contentinfo [ref=e91]:
+    - paragraph [ref=e92]: Gemini RAG Skin — Powered by Google Gemini
+```

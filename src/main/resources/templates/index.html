@@ -63,8 +63,10 @@
                     <div class="form-group prompt-group" th:each="prompt, iterStat : ${allPrompts}">
                         <label th:for="'prompt' + ${iterStat.count}" th:text="'Prompt ' + ${iterStat.count}"></label>
                         <div class="prompt-input-wrapper">
-                            <input type="text" th:id="'prompt' + ${iterStat.count}"
-                                   th:name="'prompt' + ${iterStat.count}" th:value="${prompt}">
+                            <textarea th:id="'prompt' + ${iterStat.count}"
+                                      th:name="'prompt' + ${iterStat.count}"
+                                      rows="3"
+                                      th:text="${prompt}"></textarea>
                             <button type="button" class="btn-icon btn-delete-prompt"
                                     onclick="deletePrompt(this)"
                                     th:aria-label="'Delete prompt ' + ${iterStat.count}"
@@ -362,11 +364,11 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'prompt-input-wrapper';
 
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.id = 'prompt' + promptCount;
-            input.name = 'prompt' + promptCount;
-            input.value = '';
+            const textarea = document.createElement('textarea');
+            textarea.id = 'prompt' + promptCount;
+            textarea.name = 'prompt' + promptCount;
+            textarea.rows = 3;
+            textarea.value = '';
 
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
@@ -376,7 +378,7 @@
             deleteBtn.setAttribute('title', 'Delete this prompt');
             deleteBtn.textContent = '🗑️';
 
-            wrapper.appendChild(input);
+            wrapper.appendChild(textarea);
             wrapper.appendChild(deleteBtn);
             formGroup.appendChild(label);
             formGroup.appendChild(wrapper);
@@ -401,16 +403,16 @@
             promptGroups.forEach((group, index) => {
                 const newNumber = index + 1;
                 const label = group.querySelector('label');
-                const input = group.querySelector('input');
+                const textarea = group.querySelector('textarea');
                 const deleteBtn = group.querySelector('.btn-delete-prompt');
 
                 if (label) {
                     label.textContent = 'Prompt ' + newNumber;
                     label.setAttribute('for', 'prompt' + newNumber);
                 }
-                if (input) {
-                    input.id = 'prompt' + newNumber;
-                    input.name = 'prompt' + newNumber;
+                if (textarea) {
+                    textarea.id = 'prompt' + newNumber;
+                    textarea.name = 'prompt' + newNumber;
                 }
                 if (deleteBtn) {
                     deleteBtn.setAttribute('aria-label', 'Delete prompt ' + newNumber);

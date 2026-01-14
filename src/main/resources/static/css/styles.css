@@ -150,10 +150,10 @@ p {
 .prompt-input-wrapper {
     display: flex;
     gap: 0.5rem;
-    align-items: center;
+    align-items: flex-start;
 }
 
-.prompt-input-wrapper input {
+.prompt-input-wrapper textarea {
     flex: 1;
 }
 
