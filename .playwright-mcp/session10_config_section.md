@@ -1,0 +1,64 @@
+### Page state
+- Page URL: http://localhost:8080/
+- Page Title: Gemini RAG Skin
+- Page Snapshot:
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Gemini RAG Skin" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Query your project documentation with AI
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Configuration" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - generic [ref=e10]: System Prompt
+          - textbox "System Prompt" [ref=e11]: You are a solution architect assistant. Answer questions based on the uploaded project documents. Provide detailed, accurate responses with references to specific sections of the uploaded files.
+        - generic [ref=e12]:
+          - generic [ref=e13]: Prompt 1
+          - textbox "Prompt 1" [ref=e14]: What is the system architecture?
+        - generic [ref=e15]:
+          - generic [ref=e16]: Prompt 2
+          - textbox "Prompt 2" [ref=e17]: What are the integration points and external dependencies?
+        - generic [ref=e18]:
+          - generic [ref=e19]: Prompt 3
+          - textbox "Prompt 3" [ref=e20]: What technologies and frameworks are used?
+        - button "Save Configuration" [ref=e22] [cursor=pointer]
+    - generic [ref=e23]:
+      - heading "Upload Files" [level=2] [ref=e24]
+      - generic [ref=e25]:
+        - generic [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: 📁
+          - paragraph [ref=e28]: Drag and drop files here, or click to select
+          - paragraph [ref=e29]: "Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)"
+        - button "Upload Files" [ref=e31] [cursor=pointer]
+    - generic [ref=e32]:
+      - heading "Uploaded Files" [level=2] [ref=e33]
+      - list [ref=e34]:
+        - listitem [ref=e35]:
+          - generic [ref=e36]: 📝
+          - generic [ref=e37]: test.txt
+          - generic [ref=e38]: 17 B
+          - button "Delete test.txt" [ref=e40] [cursor=pointer]: Delete
+        - listitem [ref=e41]:
+          - generic [ref=e42]: 📋
+          - generic [ref=e43]: test.md
+          - generic [ref=e44]: 18 B
+          - button "Delete test.md" [ref=e46] [cursor=pointer]: Delete
+    - generic [ref=e47]:
+      - heading "Search Documents" [level=2] [ref=e48]
+      - generic [ref=e49]:
+        - button "Architecture" [ref=e50] [cursor=pointer]
+        - button "Integrations" [ref=e51] [cursor=pointer]
+        - button "Technologies" [ref=e52] [cursor=pointer]
+      - generic [ref=e54]:
+        - generic [ref=e55]: Search Query
+        - textbox "Search Query" [ref=e56]:
+          - /placeholder: Enter your question about the uploaded documents...
+        - button "Search" [ref=e57] [cursor=pointer]
+    - generic [ref=e58]:
+      - heading "Results" [level=2] [ref=e59]
+      - paragraph [ref=e61]: No searches performed yet. Upload files and ask a question to get started.
+  - contentinfo [ref=e62]:
+    - paragraph [ref=e63]: Gemini RAG Skin — Powered by Google Gemini
+```
