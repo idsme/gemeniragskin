@@ -1,1 +1,1 @@
-Testing very long filename handling
+This is a test file with a very long filename for testing purposes.
