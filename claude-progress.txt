@@ -215,3 +215,45 @@ Continued feature verification and testing. The application is working well with
 
 ---
 Last Updated: Session 3 (Coding Agent)
+
+### Additional Features Verified (continued)
+
+15. **Feature #21** - Session history shows all query/response pairs ✅
+    - Multiple query/response articles visible in Results section
+    - All previous queries persist in session
+
+16. **Feature #22** - Session history shows most recent at top ✅
+    - Queries ordered by timestamp (newest first)
+    - Verified via timestamps: 4:50 am > 4:49 am > 4:45 am > 4:43 am
+
+17. **Feature #23** - Query text displayed above each response ✅
+    - Each article shows query text at top
+    - Response content below query
+
+18. **Feature #24** - Timestamp displayed for each query ✅
+    - Format: "Jan 14, 2026 4:50 am"
+    - Human-readable date and time
+
+19. **Feature #25** - Results section shows empty state ✅
+    - "No searches performed yet" message when no searches
+
+20. **Feature #26** - Fresh corpus created on application startup ✅
+    - @PostConstruct creates new corpus
+    - @PreDestroy cleans up corpus
+    - uploadedFiles.clear() on init
+
+21. **Feature #27** - Light theme colors applied correctly ✅
+    - Background: #FFFFFF (white)
+    - Text: #333333 (dark gray)
+    - Accent: #2563EB (blue)
+    - Borders: #E5E5E5 (light gray)
+
+### Updated Feature Status
+
+- **Total Features:** 65
+- **Passing:** 27
+- **In Progress:** 0
+- **Percentage Complete:** 41.5%
+
+---
+Last Updated: Session 3 (Coding Agent) - Update 2
