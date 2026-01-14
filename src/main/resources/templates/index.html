@@ -138,7 +138,7 @@
                         onclick="fillSearch(this)"
                         th:disabled="${!hasFiles}"
                         th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}"
-                        th:text="'Quick ' + ${iterStat.count}">
+                        th:text="${prompt}">
                 </button>
             </div>
             <form th:action="@{/search}" method="post" class="search-form">
