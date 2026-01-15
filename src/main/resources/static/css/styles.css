@@ -1,42 +1,24 @@
 /* Gemini RAG Skin - Styles */
 
-/* CSS Variables for theming */
+/* CSS4 Variables for Prime Video-inspired theming */
 :root {
-    /* Light theme (default) */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F5F5F5;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --accent-primary: #2563EB;
-    --accent-hover: #1D4ED8;
-    --error: #DC2626;
-    --error-bg: #FEE2E2;
-    --success: #16A34A;
-    --success-bg: #DCFCE7;
-    --warning: #D97706;
-    --warning-bg: #FEF3C7;
-    --border: #E5E5E5;
-    --shadow: rgba(0, 0, 0, 0.1);
-}
-
-/* Dark theme */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-primary: #1A1A1A;
-        --bg-secondary: #0D0D0D;
-        --text-primary: #E5E5E5;
-        --text-secondary: #A3A3A3;
-        --accent-primary: #60A5FA;
-        --accent-hover: #93C5FD;
-        --error: #F87171;
-        --error-bg: #450A0A;
-        --success: #4ADE80;
-        --success-bg: #052E16;
-        --warning: #FBBF24;
-        --warning-bg: #451A03;
-        --border: #333333;
-        --shadow: rgba(0, 0, 0, 0.3);
-    }
+    /* Prime Video Dark Theme (default) - inspired by https://www.primevideo.com/ */
+    --bg-primary: #0F0F0F;        /* Deep charcoal background */
+    --bg-secondary: #1A1A1A;      /* Slightly lighter for cards */
+    --bg-tertiary: #232323;       /* Interactive element background */
+    --text-primary: #FFFFFF;      /* Pure white for primary text */
+    --text-secondary: #AAAAAA;    /* Gray for secondary text */
+    --accent-primary: #00A8E1;    /* Prime Video signature cyan/blue */
+    --accent-hover: #00C4FF;      /* Brighter cyan on hover */
+    --error: #FF4444;             /* Bright red for errors */
+    --error-bg: #2A0F0F;          /* Dark red background */
+    --success: #00C853;           /* Bright green for success */
+    --success-bg: #0F2A0F;        /* Dark green background */
+    --warning: #FFB300;           /* Bright amber for warnings */
+    --warning-bg: #2A220F;        /* Dark amber background */
+    --border: #2A2A2A;            /* Subtle borders */
+    --border-hover: #404040;      /* Visible borders on hover */
+    --shadow: rgba(0, 0, 0, 0.5); /* Deeper shadows for depth */
 }
 
 /* Reset and base styles */
