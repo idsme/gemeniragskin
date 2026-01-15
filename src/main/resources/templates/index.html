@@ -136,26 +136,6 @@
         <!-- Search Section -->
         <section class="section search-section">
             <h2 class="section-title">Search Documents</h2>
-            <div class="prompt-selection-list">
-                <div class="prompt-selection-item" th:each="prompt, iterStat : ${allPrompts}">
-                    <input type="checkbox"
-                           th:id="'promptCheck' + ${iterStat.count}"
-                           class="prompt-checkbox"
-                           th:data-prompt="${prompt}"
-                           th:disabled="${!hasFiles}">
-                    <label th:for="'promptCheck' + ${iterStat.count}"
-                           class="prompt-checkbox-label"
-                           th:text="${prompt}"></label>
-                </div>
-            </div>
-            <div class="prompt-selection-actions">
-                <button type="button" class="btn btn-primary" id="executePromptsBtn"
-                        onclick="executeSelectedPrompts()"
-                        th:disabled="${!hasFiles}"
-                        th:title="${hasFiles ? 'Execute selected prompts' : 'Upload files first'}">
-                    Execute Selected Prompts
-                </button>
-            </div>
             <form th:action="@{/search}" method="post" class="search-form">
                 <div class="search-input-group">
                     <label for="searchQuery" class="sr-only">Search Query</label>
@@ -205,7 +185,43 @@
                     <textarea id="projectDescription" name="projectDescription" rows="15"
                               placeholder="Enter your project description here (max 500 words)...&#10;&#10;Include:&#10;- Summary&#10;- Requirements (Frontend, Backend, Database, Stack)&#10;- Financials&#10;- Goal&#10;- Situation&#10;- Problem&#10;- Solution approach"
                               maxlength="5000"
-                              required></textarea>
+                              required>
+                        SUMMARY:
+This project aims to build a unified Project Requirement Description submission system that allows users to write, validate, and upload structured project documentation directly to the Gemini File Search API. The goal is to reduce friction in product planning by centralizing requirement collection and automating the handoff to AI analysis tools. The application provides a standardized input experience and ensures consistent formatting, length control, and data storage.
+
+GOAL:
+The primary goal is to enable teams to create high-quality PRDs quickly and upload them for AI-powered search, validation, and future product reasoning. Success is measured by improved documentation quality, faster planning cycles, and seamless Gemini integration.
+
+SITUATION:
+Many teams currently write project descriptions in scattered documents or chat systems. These lack structure, validation, and easy upload to AI systems. There is no consistent pipeline to store, index, and analyze product requirements using Gemini.
+
+PROBLEM:
+Unstructured requirements lead to misunderstanding, missed scope, and poor technical planning. Without a direct file upload mechanism to Gemini, teams cannot leverage advanced AI search and retrieval for PRDs.
+
+FRONTEND REQUIREMENTS:
+The frontend must provide a 15-row textarea, enforce a 500-word limit, display word count, and present a send button. It must be responsive, lightweight, and accessible. Validation should prevent empty submissions.
+
+BACKEND REQUIREMENTS:
+The backend must handle file packaging, authentication, and transmission to the Gemini Files API. It must return upload status, file IDs, and handle errors gracefully.
+
+DATABASE REQUIREMENTS:
+A database is optional but recommended to store uploaded PRDs, Gemini file IDs, timestamps, and user identifiers for retrieval and auditing.
+
+STACK:
+HTML, CSS, and JavaScript for UI. Optional Node.js backend. Gemini API for file storage and search. Optional PostgreSQL or Firebase for persistence.
+
+FINANCIALS:
+Costs include Gemini API usage, hosting, storage, and development time. Estimated monthly operating cost is minimal for low-volume usage and scales with file storage and API calls.
+
+SECURITY:
+API keys must be stored securely. Requests must be authenticated. No sensitive data should be exposed client-side.
+
+SCALABILITY:
+The system must support multiple concurrent uploads and growing file storage.
+
+SUCCESS METRICS:
+Upload success rate, PRD quality consistency, reduced planning errors, and faster documentation cycles.
+                    </textarea>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary" id="sendProjectBtn">Send to Knowledge Base</button>
@@ -270,41 +286,6 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
-        // Execute selected prompts (multiple queries)
-        function executeSelectedPrompts() {
-            const checkboxes = document.querySelectorAll('.prompt-checkbox:checked');
-
-            if (checkboxes.length === 0) {
-                alert('Please select at least one prompt to execute.');
-                return;
-            }
-
-            // Collect all selected prompts
-            const selectedPrompts = [];
-            checkboxes.forEach(checkbox => {
-                selectedPrompts.push(checkbox.getAttribute('data-prompt'));
-            });
-
-            // Submit each prompt as a separate search query
-            let completedQueries = 0;
-            selectedPrompts.forEach((prompt, index) => {
-                setTimeout(() => {
-                    // Create a hidden form to submit the query
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/search';
-
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'query';
-                    input.value = prompt;
-
-                    form.appendChild(input);
-                    document.body.appendChild(form);
-                    form.submit();
-                }, index * 100); // Small delay between submissions
-            });
-        }
 
         // Add new system prompt field
         function addNewSystemPrompt() {

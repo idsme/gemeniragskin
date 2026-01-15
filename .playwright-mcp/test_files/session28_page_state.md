@@ -1,0 +1,155 @@
+### Page state
+- Page URL: http://localhost:8080/
+- Page Title: Gemini RAG Skin
+- Page Snapshot:
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Solution Architect Agent - please review my project" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Query your project documentation with AI
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - heading "Upload Files" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - generic [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]: 📁
+          - paragraph [ref=e11]: Drag and drop files here, or click to select
+          - paragraph [ref=e12]: "Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)"
+        - button "Upload Files" [ref=e14] [cursor=pointer]
+        - generic [ref=e15]: "File uploaded successfully: regression_test_s28.txt"
+    - generic [ref=e16]:
+      - heading "Uploaded Files" [level=2] [ref=e17]
+      - list [ref=e18]:
+        - listitem [ref=e19]:
+          - generic [ref=e20]: 📝
+          - generic [ref=e21]: regression_test_s28.txt
+          - generic [ref=e22]: 746 B
+          - button "Delete regression_test_s28.txt" [ref=e24] [cursor=pointer]: Delete
+    - generic [ref=e25]:
+      - heading "Configuration" [level=2] [ref=e26]
+      - generic [ref=e27]:
+        - heading "System Prompts" [level=3] [ref=e28]
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - radio "Select system prompt 1" [checked] [ref=e32] [cursor=pointer]
+            - generic [ref=e33] [cursor=pointer]: System Prompt 1
+            - button "Delete system prompt 1" [ref=e34] [cursor=pointer]: 🗑️
+          - textbox [ref=e35]: Analyseer onderstaande project documenten vanuit solution architect perspectief. Geef korte, directe antwoorden zonder opsmuk. Beantwoord onderstaande vragen 1 voor 1
+        - button "Add System Prompt" [ref=e37] [cursor=pointer]
+        - heading "Architecture Prompts" [level=3] [ref=e38]
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]: Prompt 1
+            - generic [ref=e42]:
+              - textbox "Prompt 1" [ref=e43]: 1. SITUATIE -Wat is de huidige situatie? -Wat is de business impact als dit niet wordt opgelost?
+              - button "Delete prompt 1" [ref=e44] [cursor=pointer]: 🗑️
+          - generic [ref=e45]:
+            - generic [ref=e46]: Prompt 2
+            - generic [ref=e47]:
+              - textbox "Prompt 2" [ref=e48]: What are the integration points and external dependencies?
+              - button "Delete prompt 2" [ref=e49] [cursor=pointer]: 🗑️
+          - generic [ref=e50]:
+            - generic [ref=e51]: Prompt 3
+            - generic [ref=e52]:
+              - textbox "Prompt 3" [ref=e53]: What technologies and frameworks are used? Welke tech stack is vereist? Welke kennislacunes zijn er?
+              - button "Delete prompt 3" [ref=e54] [cursor=pointer]: 🗑️
+          - generic [ref=e55]:
+            - generic [ref=e56]: Prompt 4
+            - generic [ref=e57]:
+              - textbox "Prompt 4" [ref=e58]: "- Wat is de technische complexiteit (low/medium/high)? - Welke afhankelijkheden zijn er (systemen/teams/derden)? - Welke risico's zie je?"
+              - button "Delete prompt 4" [ref=e59] [cursor=pointer]: 🗑️
+          - generic [ref=e60]:
+            - generic [ref=e61]: Prompt 5
+            - generic [ref=e62]:
+              - textbox "Prompt 5" [ref=e63]: "- Welke bestaande systemen worden geraakt? - Wat is de impact op bestaande architectuur? - Welke migratie/transitie is nodig?"
+              - button "Delete prompt 5" [ref=e64] [cursor=pointer]: 🗑️
+          - generic [ref=e65]:
+            - generic [ref=e66]: Prompt 6
+            - generic [ref=e67]:
+              - textbox "Prompt 6" [ref=e68]: "- Totaal aantal uren (min-max range): - Verdeling per fase (analyse/ontwikkel/test/deploy):"
+              - button "Delete prompt 6" [ref=e69] [cursor=pointer]: 🗑️
+          - generic [ref=e70]:
+            - generic [ref=e71]: Prompt 7
+            - generic [ref=e72]:
+              - textbox "Prompt 7" [ref=e73]: "6. SKILL VERDELING Geef percentage verdeling: - Frontend: __% - Backend: __% - DevOps/Infra: __% - Data/Database: __% - Design/UX: __% - Testing/QA: __% - Overig: __%"
+              - button "Delete prompt 7" [ref=e74] [cursor=pointer]: 🗑️
+          - generic [ref=e75]:
+            - generic [ref=e76]: Prompt 8
+            - generic [ref=e77]:
+              - textbox "Prompt 8" [ref=e78]: "7. OPLOSSINGSVOORSTEL Schets 1 primaire oplossingsrichting: - Aanpak in 3-5 bullets - Voordelen (max 3) - Nadelen/risico's (max 3)"
+              - button "Delete prompt 8" [ref=e79] [cursor=pointer]: 🗑️
+          - generic [ref=e80]:
+            - generic [ref=e81]: Prompt 9
+            - generic [ref=e82]:
+              - textbox "Prompt 9" [ref=e83]: "8. FINANCIËLE ANALYSE Bij €90/uur: - Totale projectwaarde: €____ - Geschatte kosten (60-70% voor resources): €____ - Netto winstmarge (30-40%): €____ - Winstpercentage: ___%"
+              - button "Delete prompt 9" [ref=e84] [cursor=pointer]: 🗑️
+          - generic [ref=e85]:
+            - generic [ref=e86]: Prompt 10
+            - generic [ref=e87]:
+              - textbox "Prompt 10" [ref=e88]: "9. GO/NO-GO INDICATOREN ✓ Positief: ✗ Negatief:"
+              - button "Delete prompt 10" [ref=e89] [cursor=pointer]: 🗑️
+          - generic [ref=e90]:
+            - generic [ref=e91]: Prompt 11
+            - generic [ref=e92]:
+              - textbox "Prompt 11" [ref=e93]: "10. CONCLUSIE - Is dit project interessant? (JA/NEE/MISSCHIEN) - In 1 zin waarom:"
+              - button "Delete prompt 11" [ref=e94] [cursor=pointer]: 🗑️
+        - generic [ref=e95]:
+          - button "Add Architecture Prompt" [ref=e96] [cursor=pointer]
+          - button "Save Configuration" [ref=e97] [cursor=pointer]
+    - generic [ref=e98]:
+      - heading "Search Documents" [level=2] [ref=e99]
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - checkbox "1. SITUATIE -Wat is de huidige situatie? -Wat is de business impact als dit niet wordt opgelost?" [ref=e102] [cursor=pointer]
+          - generic [ref=e103] [cursor=pointer]: 1. SITUATIE -Wat is de huidige situatie? -Wat is de business impact als dit niet wordt opgelost?
+        - generic [ref=e104]:
+          - checkbox "What are the integration points and external dependencies?" [ref=e105] [cursor=pointer]
+          - generic [ref=e106] [cursor=pointer]: What are the integration points and external dependencies?
+        - generic [ref=e107]:
+          - checkbox "What technologies and frameworks are used? Welke tech stack is vereist? Welke kennislacunes zijn er?" [ref=e108] [cursor=pointer]
+          - generic [ref=e109] [cursor=pointer]: What technologies and frameworks are used? Welke tech stack is vereist? Welke kennislacunes zijn er?
+        - generic [ref=e110]:
+          - checkbox "- Wat is de technische complexiteit (low/medium/high)? - Welke afhankelijkheden zijn er (systemen/teams/derden)? - Welke risico's zie je?" [ref=e111] [cursor=pointer]
+          - generic [ref=e112] [cursor=pointer]: "- Wat is de technische complexiteit (low/medium/high)? - Welke afhankelijkheden zijn er (systemen/teams/derden)? - Welke risico's zie je?"
+        - generic [ref=e113]:
+          - checkbox "- Welke bestaande systemen worden geraakt? - Wat is de impact op bestaande architectuur? - Welke migratie/transitie is nodig?" [ref=e114] [cursor=pointer]
+          - generic [ref=e115] [cursor=pointer]: "- Welke bestaande systemen worden geraakt? - Wat is de impact op bestaande architectuur? - Welke migratie/transitie is nodig?"
+        - generic [ref=e116]:
+          - 'checkbox "- Totaal aantal uren (min-max range): - Verdeling per fase (analyse/ontwikkel/test/deploy):" [ref=e117] [cursor=pointer]'
+          - generic [ref=e118] [cursor=pointer]: "- Totaal aantal uren (min-max range): - Verdeling per fase (analyse/ontwikkel/test/deploy):"
+        - generic [ref=e119]:
+          - 'checkbox "6. SKILL VERDELING Geef percentage verdeling: - Frontend: __% - Backend: __% - DevOps/Infra: __% - Data/Database: __% - Design/UX: __% - Testing/QA: __% - Overig: __%" [ref=e120] [cursor=pointer]'
+          - generic [ref=e121] [cursor=pointer]: "6. SKILL VERDELING Geef percentage verdeling: - Frontend: __% - Backend: __% - DevOps/Infra: __% - Data/Database: __% - Design/UX: __% - Testing/QA: __% - Overig: __%"
+        - generic [ref=e122]:
+          - 'checkbox "7. OPLOSSINGSVOORSTEL Schets 1 primaire oplossingsrichting: - Aanpak in 3-5 bullets - Voordelen (max 3) - Nadelen/risico''s (max 3)" [ref=e123] [cursor=pointer]'
+          - generic [ref=e124] [cursor=pointer]: "7. OPLOSSINGSVOORSTEL Schets 1 primaire oplossingsrichting: - Aanpak in 3-5 bullets - Voordelen (max 3) - Nadelen/risico's (max 3)"
+        - generic [ref=e125]:
+          - 'checkbox "8. FINANCIËLE ANALYSE Bij €90/uur: - Totale projectwaarde: €____ - Geschatte kosten (60-70% voor resources): €____ - Netto winstmarge (30-40%): €____ - Winstpercentage: ___%" [ref=e126] [cursor=pointer]'
+          - generic [ref=e127] [cursor=pointer]: "8. FINANCIËLE ANALYSE Bij €90/uur: - Totale projectwaarde: €____ - Geschatte kosten (60-70% voor resources): €____ - Netto winstmarge (30-40%): €____ - Winstpercentage: ___%"
+        - generic [ref=e128]:
+          - 'checkbox "9. GO/NO-GO INDICATOREN ✓ Positief: ✗ Negatief:" [ref=e129] [cursor=pointer]'
+          - generic [ref=e130] [cursor=pointer]: "9. GO/NO-GO INDICATOREN ✓ Positief: ✗ Negatief:"
+        - generic [ref=e131]:
+          - checkbox "10. CONCLUSIE - Is dit project interessant? (JA/NEE/MISSCHIEN) - In 1 zin waarom:" [ref=e132] [cursor=pointer]
+          - generic [ref=e133] [cursor=pointer]: "10. CONCLUSIE - Is dit project interessant? (JA/NEE/MISSCHIEN) - In 1 zin waarom:"
+      - button "Execute Selected Prompts" [ref=e135] [cursor=pointer]
+      - generic [ref=e137]:
+        - generic [ref=e138]: Search Query
+        - textbox "Search Query" [ref=e139]:
+          - /placeholder: Enter your question about the uploaded documents...
+        - button "Search" [ref=e140] [cursor=pointer]
+    - generic [ref=e141]:
+      - heading "Results" [level=2] [ref=e142]
+      - paragraph [ref=e144]: No searches performed yet. Upload files and ask a question to get started.
+    - generic [ref=e145]:
+      - heading "Demo Project Summary" [level=2] [ref=e146]
+      - paragraph [ref=e147]: Enter a comprehensive product requirement description to upload as a text document to the knowledge base.
+      - generic [ref=e148]:
+        - generic [ref=e149]:
+          - generic [ref=e150]: Project Description
+          - textbox "Project Description" [ref=e151]:
+            - /placeholder: "Enter your project description here (max 500 words)...\n\nInclude:\n- Summary\n- Requirements (Frontend, Backend, Database, Stack)\n- Financials\n- Goal\n- Situation\n- Problem\n- Solution approach"
+        - button "Send to Knowledge Base" [ref=e153] [cursor=pointer]
+  - contentinfo [ref=e154]:
+    - paragraph [ref=e155]: Gemini RAG Skin — Powered by Google Gemini
+```
