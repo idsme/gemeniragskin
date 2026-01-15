@@ -1,0 +1,1 @@
+Regression test for Session 25 - Testing success/error message styling
