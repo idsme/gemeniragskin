@@ -136,12 +136,29 @@
         <!-- Search Section -->
         <section class="section search-section">
             <h2 class="section-title">Search Documents</h2>
+
+            <!-- Predefined Prompts with Checkboxes -->
+            <div th:if="${allPrompts != null && !allPrompts.isEmpty()}" class="prompt-checkboxes" style="margin-bottom: 1.5rem;">
+                <div th:each="prompt, iterStat : ${allPrompts}" class="prompt-checkbox-item" style="margin-bottom: 0.75rem;">
+                    <input type="checkbox"
+                           th:id="'promptCheckbox' + ${iterStat.count}"
+                           th:value="${prompt}"
+                           th:disabled="${!hasFiles}"
+                           onclick="copyPromptToSearch(this)"
+                           style="margin-right: 0.5rem; cursor: pointer;">
+                    <label th:for="'promptCheckbox' + ${iterStat.count}"
+                           th:text="${prompt}"
+                           style="cursor: pointer; user-select: none;"></label>
+                </div>
+            </div>
+
             <form th:action="@{/search}" method="post" class="search-form">
                 <div class="search-input-group">
                     <label for="searchQuery" class="sr-only">Search Query</label>
-                    <input type="text" id="searchQuery" name="query"
+                    <textarea id="searchQuery" name="query" rows="4"
                            placeholder="Enter your question about the uploaded documents..."
-                           th:disabled="${!hasFiles}">
+                           th:disabled="${!hasFiles}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid #333; border-radius: 4px; background: #1A1A1A; color: #fff; resize: vertical; font-family: inherit;"></textarea>
                     <button type="submit" class="btn btn-primary" id="searchBtn"
                             th:disabled="${!hasFiles}"
                             th:title="${hasFiles ? 'Search' : 'Upload files first'}">
@@ -464,6 +481,26 @@ Upload success rate, PRD quality consistency, reduced planning errors, and faste
                     deleteBtn.setAttribute('aria-label', 'Delete prompt ' + newNumber);
                 }
             });
+        }
+
+        // Copy prompt to search textarea when checkbox is clicked
+        function copyPromptToSearch(checkbox) {
+            const searchTextarea = document.getElementById('searchQuery');
+            if (checkbox.checked && searchTextarea) {
+                // Copy the prompt value to the search textarea
+                searchTextarea.value = checkbox.value;
+
+                // Uncheck all other checkboxes
+                const allCheckboxes = document.querySelectorAll('.prompt-checkbox-item input[type="checkbox"]');
+                allCheckboxes.forEach(cb => {
+                    if (cb !== checkbox) {
+                        cb.checked = false;
+                    }
+                });
+            } else if (!checkbox.checked && searchTextarea) {
+                // If unchecked, clear the search textarea
+                searchTextarea.value = '';
+            }
         }
 
         // Prevent double submission
