@@ -87,6 +87,21 @@ public class FileService {
     }
 
     /**
+     * Uploads text content as a file to the Gemini corpus.
+     *
+     * @param textContent The text content to upload
+     * @return The FileInfo representing the uploaded text file
+     * @throws IOException if there's an error during upload
+     */
+    public FileInfo uploadTextAsFile(String textContent) throws IOException {
+        if (textContent == null || textContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("Text content cannot be empty");
+        }
+
+        return geminiCorpusService.uploadTextAsFile(textContent);
+    }
+
+    /**
      * Lists all files in the current corpus.
      *
      * @return List of FileInfo representing all files

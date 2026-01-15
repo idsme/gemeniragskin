@@ -86,4 +86,35 @@ public class FileController {
 
         return "redirect:/";
     }
+
+    /**
+     * Handles text upload as a file.
+     *
+     * @param projectDescription The text content to upload
+     * @param redirectAttributes For adding flash messages
+     * @return Redirect to main page
+     */
+    @PostMapping("/upload-text")
+    public String uploadText(
+            @RequestParam("projectDescription") String projectDescription,
+            RedirectAttributes redirectAttributes) {
+
+        if (projectDescription == null || projectDescription.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("textUploadError", "Project description cannot be empty");
+            return "redirect:/";
+        }
+
+        try {
+            FileInfo uploadedFile = fileService.uploadTextAsFile(projectDescription);
+            redirectAttributes.addFlashAttribute("textUploadSuccess",
+                    "Project summary uploaded successfully: " + uploadedFile.getName());
+            logger.info("Uploaded text as file: {}", uploadedFile.getName());
+        } catch (Exception e) {
+            logger.error("Text upload failed", e);
+            redirectAttributes.addFlashAttribute("textUploadError",
+                    "Upload failed: " + e.getMessage() + ". Please try again.");
+        }
+
+        return "redirect:/";
+    }
 }

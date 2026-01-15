@@ -179,6 +179,26 @@
                 </article>
             </div>
         </section>
+
+        <!-- Demo Project Summary Section -->
+        <section class="section demo-project-section">
+            <h2 class="section-title">Demo Project Summary</h2>
+            <p class="section-description">Enter a comprehensive product requirement description to upload as a text document to the knowledge base.</p>
+            <form th:action="@{/upload-text}" method="post" class="demo-project-form">
+                <div class="form-group">
+                    <label for="projectDescription" class="sr-only">Project Description</label>
+                    <textarea id="projectDescription" name="projectDescription" rows="15"
+                              placeholder="Enter your project description here (max 500 words)...&#10;&#10;Include:&#10;- Summary&#10;- Requirements (Frontend, Backend, Database, Stack)&#10;- Financials&#10;- Goal&#10;- Situation&#10;- Problem&#10;- Solution approach"
+                              maxlength="5000"
+                              required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="sendProjectBtn">Send to Knowledge Base</button>
+                </div>
+                <div th:if="${textUploadSuccess}" class="message message-success" th:text="${textUploadSuccess}"></div>
+                <div th:if="${textUploadError}" class="message message-error" th:text="${textUploadError}"></div>
+            </form>
+        </section>
     </main>
 
     <!-- Footer -->

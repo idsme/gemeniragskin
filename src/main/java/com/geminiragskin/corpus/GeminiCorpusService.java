@@ -328,6 +328,32 @@ public class GeminiCorpusService {
     }
 
     /**
+     * Uploads text content as a file to the Gemini API.
+     *
+     * @param textContent The text content to upload
+     * @return FileInfo representing the uploaded text file
+     * @throws IOException if upload fails
+     */
+    public FileInfo uploadTextAsFile(String textContent) throws IOException {
+        validateApiKey();
+
+        String filename = "project-summary-" + System.currentTimeMillis() + ".txt";
+        byte[] fileContent = textContent.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String mimeType = "text/plain";
+
+        // Upload to Gemini Files API
+        String fileUri = uploadToGeminiFiles(filename, fileContent, mimeType);
+
+        // Create file info and store
+        String fileId = UUID.randomUUID().toString();
+        FileInfo fileInfo = new FileInfo(fileId, filename, mimeType, fileContent.length);
+        uploadedFiles.add(fileInfo);
+
+        logger.info("Text file uploaded successfully: {} ({})", filename, fileId);
+        return fileInfo;
+    }
+
+    /**
      * Validates that the API key is configured.
      */
     private void validateApiKey() throws IOException {
