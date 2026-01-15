@@ -1,0 +1,1 @@
+Test file for Feature 74 - checkbox functionality testing

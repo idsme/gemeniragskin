@@ -131,14 +131,24 @@
         <!-- Search Section -->
         <section class="section search-section">
             <h2 class="section-title">Search Documents</h2>
-            <div class="quick-prompts">
-                <button type="button" class="btn btn-secondary quick-prompt"
-                        th:each="prompt, iterStat : ${allPrompts}"
-                        th:data-prompt="${prompt}"
-                        onclick="fillSearch(this)"
+            <div class="prompt-selection-list">
+                <div class="prompt-selection-item" th:each="prompt, iterStat : ${allPrompts}">
+                    <input type="checkbox"
+                           th:id="'promptCheck' + ${iterStat.count}"
+                           class="prompt-checkbox"
+                           th:data-prompt="${prompt}"
+                           th:disabled="${!hasFiles}">
+                    <label th:for="'promptCheck' + ${iterStat.count}"
+                           class="prompt-checkbox-label"
+                           th:text="${prompt}"></label>
+                </div>
+            </div>
+            <div class="prompt-selection-actions">
+                <button type="button" class="btn btn-primary" id="executePromptsBtn"
+                        onclick="executeSelectedPrompts()"
                         th:disabled="${!hasFiles}"
-                        th:title="${hasFiles ? 'Click to use this prompt' : 'Upload files first'}"
-                        th:text="${prompt}">
+                        th:title="${hasFiles ? 'Execute selected prompts' : 'Upload files first'}">
+                    Execute Selected Prompts
                 </button>
             </div>
             <form th:action="@{/search}" method="post" class="search-form">
@@ -255,10 +265,40 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
-        // Fill search box with quick prompt
-        function fillSearch(button) {
-            const prompt = button.getAttribute('data-prompt');
-            document.getElementById('searchQuery').value = prompt;
+        // Execute selected prompts (multiple queries)
+        function executeSelectedPrompts() {
+            const checkboxes = document.querySelectorAll('.prompt-checkbox:checked');
+
+            if (checkboxes.length === 0) {
+                alert('Please select at least one prompt to execute.');
+                return;
+            }
+
+            // Collect all selected prompts
+            const selectedPrompts = [];
+            checkboxes.forEach(checkbox => {
+                selectedPrompts.push(checkbox.getAttribute('data-prompt'));
+            });
+
+            // Submit each prompt as a separate search query
+            let completedQueries = 0;
+            selectedPrompts.forEach((prompt, index) => {
+                setTimeout(() => {
+                    // Create a hidden form to submit the query
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/search';
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'query';
+                    input.value = prompt;
+
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                }, index * 100); // Small delay between submissions
+            });
         }
 
         // Add new system prompt field
