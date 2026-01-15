@@ -22,6 +22,49 @@
         <!-- Global Messages -->
         <div th:if="${error}" class="message message-error" th:text="${error}"></div>
 
+        <!-- File Upload Section -->
+        <section class="section upload-section">
+            <h2 class="section-title">Upload Files</h2>
+            <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="upload-form">
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop files here, or click to select</p>
+                    <p class="upload-hint">Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)</p>
+                    <input type="file" id="fileInput" name="files" multiple
+                           accept=".pdf,.doc,.docx,.txt,.md"
+                           aria-label="Select files to upload"
+                           onchange="updateFileList(this)">
+                </div>
+                <div id="selectedFiles" class="selected-files"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">Upload Files</button>
+                </div>
+                <div th:if="${uploadSuccess}" class="message message-success" th:text="${uploadSuccess}"></div>
+                <div th:if="${uploadError}" class="message message-error" th:text="${uploadError}"></div>
+            </form>
+        </section>
+
+        <!-- File List Section -->
+        <section class="section files-section">
+            <h2 class="section-title">Uploaded Files</h2>
+            <div th:if="${!hasFiles}" class="empty-state">
+                <p>No files uploaded yet</p>
+            </div>
+            <ul th:if="${hasFiles}" class="file-list">
+                <li th:each="file : ${files}" class="file-item">
+                    <span th:class="'file-icon ' + ${file.iconClass}" aria-hidden="true"></span>
+                    <span class="file-name" th:text="${file.name}"></span>
+                    <span class="file-size" th:text="${file.displaySize}"></span>
+                    <form th:action="@{/delete/{id}(id=${file.id})}" method="post" class="delete-form">
+                        <button type="submit" class="btn btn-danger btn-small"
+                                th:aria-label="'Delete ' + ${file.name}">Delete</button>
+                    </form>
+                </li>
+            </ul>
+            <div th:if="${deleteSuccess}" class="message message-success" th:text="${deleteSuccess}"></div>
+            <div th:if="${deleteError}" class="message message-error" th:text="${deleteError}"></div>
+        </section>
+
         <!-- Config Section -->
         <section class="section config-section">
             <h2 class="section-title">Configuration</h2>
@@ -83,49 +126,6 @@
                 <div th:if="${configSuccess}" class="message message-success" th:text="${configSuccess}"></div>
                 <div th:if="${configError}" class="message message-error" th:text="${configError}"></div>
             </form>
-        </section>
-
-        <!-- File Upload Section -->
-        <section class="section upload-section">
-            <h2 class="section-title">Upload Files</h2>
-            <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="upload-form">
-                <div class="upload-area" id="dropZone">
-                    <div class="upload-icon">📁</div>
-                    <p>Drag and drop files here, or click to select</p>
-                    <p class="upload-hint">Supported formats: PDF, Word (.doc, .docx), TXT, MD (Max 50MB per file)</p>
-                    <input type="file" id="fileInput" name="files" multiple
-                           accept=".pdf,.doc,.docx,.txt,.md"
-                           aria-label="Select files to upload"
-                           onchange="updateFileList(this)">
-                </div>
-                <div id="selectedFiles" class="selected-files"></div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="uploadBtn">Upload Files</button>
-                </div>
-                <div th:if="${uploadSuccess}" class="message message-success" th:text="${uploadSuccess}"></div>
-                <div th:if="${uploadError}" class="message message-error" th:text="${uploadError}"></div>
-            </form>
-        </section>
-
-        <!-- File List Section -->
-        <section class="section files-section">
-            <h2 class="section-title">Uploaded Files</h2>
-            <div th:if="${!hasFiles}" class="empty-state">
-                <p>No files uploaded yet</p>
-            </div>
-            <ul th:if="${hasFiles}" class="file-list">
-                <li th:each="file : ${files}" class="file-item">
-                    <span th:class="'file-icon ' + ${file.iconClass}" aria-hidden="true"></span>
-                    <span class="file-name" th:text="${file.name}"></span>
-                    <span class="file-size" th:text="${file.displaySize}"></span>
-                    <form th:action="@{/delete/{id}(id=${file.id})}" method="post" class="delete-form">
-                        <button type="submit" class="btn btn-danger btn-small"
-                                th:aria-label="'Delete ' + ${file.name}">Delete</button>
-                    </form>
-                </li>
-            </ul>
-            <div th:if="${deleteSuccess}" class="message message-success" th:text="${deleteSuccess}"></div>
-            <div th:if="${deleteError}" class="message message-error" th:text="${deleteError}"></div>
         </section>
 
         <!-- Search Section -->
