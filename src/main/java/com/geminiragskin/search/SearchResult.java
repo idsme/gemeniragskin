@@ -86,4 +86,16 @@ public class SearchResult {
     public void setFormattedTimestamp(String formattedTimestamp) {
         this.formattedTimestamp = formattedTimestamp;
     }
+
+    @Override
+    public String toString() {
+        return "SearchResult{" +
+                "query='" + query + '\'' +
+                ", response='" + response + '\'' +
+                ", responseHtml='" + responseHtml + '\'' +
+                ", citations=" + citations +
+                ", timestamp=" + timestamp +
+                ", formattedTimestamp='" + formattedTimestamp + '\'' +
+                '}';
+    }
 }

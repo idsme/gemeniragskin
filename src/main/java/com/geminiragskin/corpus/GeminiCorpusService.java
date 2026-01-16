@@ -196,23 +196,103 @@ public class GeminiCorpusService {
     }
 
     /**
-     * Deletes a file from the corpus.
+     * Deletes a file from the Gemini corpus.
      *
      * @param fileId The ID of the file to delete
      * @throws IOException if deletion fails
      */
     public void deleteFile(String fileId) throws IOException {
-        uploadedFiles.removeIf(f -> f.getId().equals(fileId));
-        logger.info("File deleted: {}", fileId);
+        validateApiKey();
+
+        try {
+            // Delete from Gemini API
+            // The file ID may be in format "fileId" or "files/fileId", ensure correct format
+            String geminiFileId = fileId.startsWith("files/") ? fileId : "files/" + fileId;
+
+            webClient.delete()
+                    .uri("/" + geminiFileId + "?key=" + apiKey)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+
+            logger.info("File deleted from Gemini API: {}", fileId);
+
+            // Also remove from in-memory list
+            uploadedFiles.removeIf(f -> f.getId().equals(fileId));
+
+        } catch (Exception e) {
+            logger.error("Failed to delete file from Gemini API: {}", fileId, e);
+            // Still remove from in-memory list even if API call fails
+            uploadedFiles.removeIf(f -> f.getId().equals(fileId));
+            throw new IOException("Failed to delete file from Gemini API: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Lists all files in the current corpus.
+     * Lists all files in the current corpus by fetching from Gemini API.
      *
      * @return List of FileInfo
      */
     public List<FileInfo> listFiles() {
-        return new ArrayList<>(uploadedFiles);
+        // First, try to fetch files from Gemini API
+        try {
+            return listFilesFromGemini();
+        } catch (Exception e) {
+            logger.warn("Failed to list files from Gemini API, falling back to in-memory list: {}", e.getMessage());
+            // Fallback to in-memory list
+            return new ArrayList<>(uploadedFiles);
+        }
+    }
+
+    /**
+     * Lists files from Gemini Files API.
+     *
+     * @return List of FileInfo from Gemini API
+     * @throws IOException if API call fails
+     */
+    private List<FileInfo> listFilesFromGemini() throws IOException {
+        if (apiKey == null || apiKey.isEmpty()) {
+            return new ArrayList<>(uploadedFiles);
+        }
+
+        try {
+            String response = webClient.get()
+                    .uri("/files?key=" + apiKey)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            JsonNode responseJson = objectMapper.readTree(response);
+            JsonNode filesArray = responseJson.path("files");
+
+            List<FileInfo> geminiFiles = new ArrayList<>();
+            if (filesArray.isArray()) {
+                for (JsonNode fileNode : filesArray) {
+                    String name = fileNode.path("name").asText();
+                    String displayName = fileNode.path("displayName").asText();
+                    String mimeType = fileNode.path("mimeType").asText();
+                    long sizeBytes = fileNode.path("sizeBytes").asLong(0);
+
+                    // Extract file ID from name (format: "files/FILE_ID")
+                    String fileId = name.startsWith("files/") ? name.substring(6) : name;
+
+                    FileInfo fileInfo = new FileInfo(fileId, displayName, mimeType, sizeBytes);
+                    geminiFiles.add(fileInfo);
+                }
+            }
+
+            logger.info("Listed {} files from Gemini API", geminiFiles.size());
+
+            // Sync in-memory list with Gemini API response
+            uploadedFiles.clear();
+            uploadedFiles.addAll(geminiFiles);
+
+            return geminiFiles;
+
+        } catch (Exception e) {
+            logger.error("Failed to list files from Gemini API", e);
+            throw new IOException("Failed to list files from Gemini API: " + e.getMessage(), e);
+        }
     }
 
     /**

@@ -1,5 +1,5 @@
 # TODO
-
+Improved guidelines
 
 ## FE Stack
 * HTMX & Tailwind CSS, CSS4
@@ -22,3 +22,11 @@
 ## CI/CD
 * Github Actions    
 * Railways
+
+## Logging
+* Use SLF4J and use info level on all service level methods and log input and output parameters
+
+* Don't create ne exception classes, use standard the exceptions available.
+
+## Use libs
+* Lombok

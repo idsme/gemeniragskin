@@ -51,7 +51,10 @@ public class SearchService {
 
         // Use the active (selected) system prompt
         String systemPrompt = promptConfigService.getActiveSystemPrompt();
+        logger.info("Executing search for query: ", query);
+        logger.info("system prompt: {}", query, systemPrompt);
         SearchResult result = geminiCorpusService.search(query, systemPrompt);
+        logger.info("Search response: {}", result);
 
         // Render markdown to HTML
         String responseHtml = renderMarkdown(result.getResponse());
