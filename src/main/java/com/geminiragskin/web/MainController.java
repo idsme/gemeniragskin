@@ -57,6 +57,7 @@ public class MainController {
         // Search results data
         model.addAttribute("searchResults", searchService.getSearchHistory());
         model.addAttribute("hasSearchResults", searchService.hasSearchHistory());
+        model.addAttribute("lastQuery", searchService.getLastQuery());
 
         // API status
         model.addAttribute("apiConfigured", geminiCorpusService.isApiKeyConfigured());

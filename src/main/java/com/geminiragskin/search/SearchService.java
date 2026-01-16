@@ -88,6 +88,19 @@ public class SearchService {
     }
 
     /**
+     * Gets the last query from the search history.
+     *
+     * @return The last query string, or empty string if no history
+     */
+    public String getLastQuery() {
+        List<SearchResult> results = queryHistory.getResults();
+        if (results.isEmpty()) {
+            return "";
+        }
+        return results.get(0).getQuery();
+    }
+
+    /**
      * Clears the search history for the current session.
      */
     public void clearHistory() {

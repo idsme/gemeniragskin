@@ -158,6 +158,7 @@
                     <textarea id="searchQuery" name="query" rows="4"
                            placeholder="Enter your question about the uploaded documents..."
                            th:disabled="${!hasFiles}"
+                           th:text="${lastQuery}"
                            style="width: 100%; padding: 0.75rem; border: 1px solid #333; border-radius: 4px; background: #1A1A1A; color: #fff; resize: vertical; font-family: inherit;"></textarea>
                     <button type="submit" class="btn btn-primary" id="searchBtn"
                             th:disabled="${!hasFiles}"
