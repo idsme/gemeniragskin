@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(convert:*)",
+      "Bash(python:*)",
+      "Bash(dir:*)"
+    ]
+  }
+}
