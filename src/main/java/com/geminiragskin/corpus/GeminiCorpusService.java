@@ -27,8 +27,8 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Service for managing Gemini File Search API operations.
- * Handles corpus creation, file upload/delete, and search queries.
+ * Service for managing Gemini File Search Store operations.
+ * Handles store creation, file import, and search queries using Gemini 2.5 File Search.
  */
 @Service
 public class GeminiCorpusService {
@@ -41,12 +41,14 @@ public class GeminiCorpusService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
+    private final FileSearchStoreService fileSearchStoreService;
 
-    // In-memory storage for uploaded files (since Gemini File API is stateless within sessions)
+    // In-memory storage for uploaded file metadata (for display purposes)
     private final List<FileInfo> uploadedFiles = new CopyOnWriteArrayList<>();
-    private String corpusId;
+    private String fileSearchStoreId;
 
-    public GeminiCorpusService() {
+    public GeminiCorpusService(FileSearchStoreService fileSearchStoreService) {
+        this.fileSearchStoreService = fileSearchStoreService;
         this.webClient = WebClient.builder()
                 .baseUrl(GEMINI_API_BASE)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -56,7 +58,7 @@ public class GeminiCorpusService {
     }
 
     /**
-     * Initialize corpus on application startup.
+     * Initialize File Search Store on application startup.
      */
     @PostConstruct
     public void init() {
@@ -66,49 +68,60 @@ public class GeminiCorpusService {
         }
 
         try {
-            // Create a fresh corpus
-            createCorpus();
-            logger.info("Gemini corpus initialized successfully");
+            // Create a fresh File Search Store
+            createFileSearchStore();
+            logger.info("Gemini File Search Store initialized successfully");
         } catch (Exception e) {
-            logger.error("Failed to initialize Gemini corpus", e);
+            logger.error("Failed to initialize Gemini File Search Store", e);
         }
     }
 
     /**
-     * Clean up corpus on application shutdown.
+     * Clean up File Search Store on application shutdown.
      */
     @PreDestroy
     public void cleanup() {
         try {
-            deleteCorpus();
-            logger.info("Gemini corpus cleaned up successfully");
+            deleteFileSearchStore();
+            logger.info("Gemini File Search Store cleaned up successfully");
         } catch (Exception e) {
-            logger.error("Failed to clean up Gemini corpus", e);
+            logger.error("Failed to clean up Gemini File Search Store", e);
         }
     }
 
     /**
-     * Creates a new corpus for this session.
+     * Creates a new File Search Store for this session.
      */
-    private void createCorpus() throws IOException {
-        this.corpusId = "corpus-" + UUID.randomUUID().toString().substring(0, 8);
+    private void createFileSearchStore() throws IOException {
+        validateApiKey();
+
+        String displayName = "RAG Store - " + UUID.randomUUID().toString().substring(0, 8);
+        this.fileSearchStoreId = fileSearchStoreService.createStore(displayName);
         this.uploadedFiles.clear();
-        logger.info("Created new corpus: {}", corpusId);
+
+        logger.info("Created new File Search Store: {}", fileSearchStoreId);
     }
 
     /**
-     * Deletes the current corpus.
+     * Deletes the current File Search Store.
      */
-    private void deleteCorpus() {
-        if (corpusId != null) {
-            uploadedFiles.clear();
-            logger.info("Deleted corpus: {}", corpusId);
-            corpusId = null;
+    private void deleteFileSearchStore() {
+        if (fileSearchStoreId != null) {
+            try {
+                fileSearchStoreService.deleteStore(fileSearchStoreId);
+                uploadedFiles.clear();
+                logger.info("Deleted File Search Store: {}", fileSearchStoreId);
+                fileSearchStoreId = null;
+            } catch (Exception e) {
+                logger.warn("Failed to delete File Search Store during cleanup", e);
+                fileSearchStoreId = null;
+            }
         }
     }
 
     /**
-     * Uploads a file to the Gemini API and corpus.
+     * Uploads a file to the File Search Store.
+     * The file is automatically indexed and embedded for semantic search.
      *
      * @param file The file to upload
      * @return FileInfo representing the uploaded file
@@ -117,86 +130,36 @@ public class GeminiCorpusService {
     public FileInfo uploadFile(MultipartFile file) throws IOException {
         validateApiKey();
 
-        String filename = file.getOriginalFilename();
-        byte[] fileContent = file.getBytes();
-        String mimeType = determineMimeType(filename);
+        if (fileSearchStoreId == null) {
+            throw new IOException("File Search Store not initialized. Please restart the application.");
+        }
 
-        // Upload to Gemini Files API
-        String fileUri = uploadToGeminiFiles(filename, fileContent, mimeType);
-
-        // Create file info and store
-        String fileId = UUID.randomUUID().toString();
-        FileInfo fileInfo = new FileInfo(fileId, filename, mimeType, file.getSize());
-        uploadedFiles.add(fileInfo);
-
-        logger.info("File uploaded successfully: {} ({})", filename, fileId);
-        return fileInfo;
-    }
-
-    /**
-     * Uploads file content to Gemini Files API using resumable upload protocol.
-     * Step 1: Start resumable upload and get upload URL
-     * Step 2: Upload file bytes to the upload URL
-     */
-    private String uploadToGeminiFiles(String filename, byte[] content, String mimeType) throws IOException {
         try {
-            WebClient uploadClient = WebClient.builder()
-                    .baseUrl("https://generativelanguage.googleapis.com")
-                    .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024))
-                    .build();
+            String filename = file.getOriginalFilename();
 
-            // Step 1: Start resumable upload
-            ObjectNode metadata = objectMapper.createObjectNode();
-            ObjectNode fileNode = metadata.putObject("file");
-            fileNode.put("display_name", filename);
+            // Import file to File Search Store
+            FileSearchStoreService.DocumentInfo docInfo =
+                fileSearchStoreService.importFileToStore(fileSearchStoreId, file);
 
-            var responseSpec = uploadClient.post()
-                    .uri("/upload/v1beta/files?key=" + apiKey)
-                    .header("X-Goog-Upload-Protocol", "resumable")
-                    .header("X-Goog-Upload-Command", "start")
-                    .header("X-Goog-Upload-Header-Content-Length", String.valueOf(content.length))
-                    .header("X-Goog-Upload-Header-Content-Type", mimeType)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(metadata.toString())
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            // Extract document ID from the full name (format: "stores/xyz/documents/abc")
+            String documentId = extractDocumentId(docInfo.getName());
 
-            // Extract upload URL from response headers
-            String uploadUrl = responseSpec.getHeaders().getFirst("X-Goog-Upload-URL");
-            if (uploadUrl == null || uploadUrl.isEmpty()) {
-                throw new IOException("Failed to get upload URL from Gemini API response");
-            }
+            // Create file info for local tracking (display purposes)
+            String fileId = UUID.randomUUID().toString();
+            FileInfo fileInfo = new FileInfo(fileId, filename, docInfo.getMimeType(), file.getSize());
+            uploadedFiles.add(fileInfo);
 
-            logger.info("Got upload URL for file: {}", filename);
-
-            // Step 2: Upload file bytes
-            String response = WebClient.create()
-                    .post()
-                    .uri(uploadUrl)
-                    .header("X-Goog-Upload-Command", "upload, finalize")
-                    .header("X-Goog-Upload-Offset", "0")
-                    .header("Content-Length", String.valueOf(content.length))
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .bodyValue(content)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            JsonNode responseJson = objectMapper.readTree(response);
-            String fileUri = responseJson.path("file").path("uri").asText();
-            String fileName = responseJson.path("file").path("name").asText();
-            logger.info("File uploaded to Gemini successfully: {} -> {} ({})", filename, fileUri, fileName);
-            return fileUri;
+            logger.info("File uploaded to File Search Store: {} ({})", filename, documentId);
+            return fileInfo;
 
         } catch (Exception e) {
-            logger.error("Failed to upload file to Gemini: {}", filename, e);
-            throw new IOException("Failed to upload file to Gemini API: " + e.getMessage(), e);
+            logger.error("Failed to upload file to File Search Store: {}", file.getOriginalFilename(), e);
+            throw new IOException("Failed to upload file to File Search Store: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Deletes a file from the Gemini corpus.
+     * Deletes a file from the File Search Store.
      *
      * @param fileId The ID of the file to delete
      * @throws IOException if deletion fails
@@ -204,114 +167,99 @@ public class GeminiCorpusService {
     public void deleteFile(String fileId) throws IOException {
         validateApiKey();
 
+        if (fileSearchStoreId == null) {
+            throw new IOException("File Search Store not initialized.");
+        }
+
         try {
-            // Delete from Gemini API
-            // The file ID may be in format "fileId" or "files/fileId", ensure correct format
-            String geminiFileId = fileId.startsWith("files/") ? fileId : "files/" + fileId;
+            // Find the file by ID and construct the document resource name
+            FileInfo fileToDelete = uploadedFiles.stream()
+                    .filter(f -> f.getId().equals(fileId))
+                    .findFirst()
+                    .orElse(null);
 
-            webClient.delete()
-                    .uri("/" + geminiFileId + "?key=" + apiKey)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            if (fileToDelete == null) {
+                logger.warn("File not found for deletion: {}", fileId);
+                uploadedFiles.removeIf(f -> f.getId().equals(fileId));
+                return;
+            }
 
-            logger.info("File deleted from Gemini API: {}", fileId);
+            // List documents to find matching one
+            List<FileSearchStoreService.DocumentInfo> documents =
+                fileSearchStoreService.listDocuments(fileSearchStoreId);
 
-            // Also remove from in-memory list
+            for (FileSearchStoreService.DocumentInfo doc : documents) {
+                if (doc.getDisplayName().equals(fileToDelete.getName())) {
+                    // Delete from File Search Store
+                    fileSearchStoreService.deleteDocument(fileSearchStoreId, extractDocumentId(doc.getName()));
+                    logger.info("File deleted from File Search Store: {}", fileId);
+                    break;
+                }
+            }
+
+            // Remove from in-memory list
             uploadedFiles.removeIf(f -> f.getId().equals(fileId));
 
         } catch (Exception e) {
-            logger.error("Failed to delete file from Gemini API: {}", fileId, e);
-            // Still remove from in-memory list even if API call fails
+            logger.error("Failed to delete file from File Search Store: {}", fileId, e);
             uploadedFiles.removeIf(f -> f.getId().equals(fileId));
-            throw new IOException("Failed to delete file from Gemini API: " + e.getMessage(), e);
+            throw new IOException("Failed to delete file from File Search Store: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Lists all files in the current corpus by fetching from Gemini API.
+     * Lists all files in the current File Search Store.
      *
      * @return List of FileInfo
      */
     public List<FileInfo> listFiles() {
-        // First, try to fetch files from Gemini API
         try {
-            return listFilesFromGemini();
-        } catch (Exception e) {
-            logger.warn("Failed to list files from Gemini API, falling back to in-memory list: {}", e.getMessage());
-            // Fallback to in-memory list
-            return new ArrayList<>(uploadedFiles);
-        }
-    }
-
-    /**
-     * Lists files from Gemini Files API.
-     *
-     * @return List of FileInfo from Gemini API
-     * @throws IOException if API call fails
-     */
-    private List<FileInfo> listFilesFromGemini() throws IOException {
-        if (apiKey == null || apiKey.isEmpty()) {
-            return new ArrayList<>(uploadedFiles);
-        }
-
-        try {
-            String response = webClient.get()
-                    .uri("/files?key=" + apiKey)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            JsonNode responseJson = objectMapper.readTree(response);
-            JsonNode filesArray = responseJson.path("files");
-
-            List<FileInfo> geminiFiles = new ArrayList<>();
-            if (filesArray.isArray()) {
-                for (JsonNode fileNode : filesArray) {
-                    String name = fileNode.path("name").asText();
-                    String displayName = fileNode.path("displayName").asText();
-                    String mimeType = fileNode.path("mimeType").asText();
-                    long sizeBytes = fileNode.path("sizeBytes").asLong(0);
-
-                    // Extract file ID from name (format: "files/FILE_ID")
-                    String fileId = name.startsWith("files/") ? name.substring(6) : name;
-
-                    FileInfo fileInfo = new FileInfo(fileId, displayName, mimeType, sizeBytes);
-                    geminiFiles.add(fileInfo);
-                }
+            if (fileSearchStoreId == null) {
+                return new ArrayList<>(uploadedFiles);
             }
 
-            logger.info("Listed {} files from Gemini API", geminiFiles.size());
+            // Sync in-memory list with actual store contents
+            List<FileSearchStoreService.DocumentInfo> storeDocuments =
+                fileSearchStoreService.listDocuments(fileSearchStoreId);
 
-            // Sync in-memory list with Gemini API response
+            // Update in-memory list
             uploadedFiles.clear();
-            uploadedFiles.addAll(geminiFiles);
+            for (FileSearchStoreService.DocumentInfo doc : storeDocuments) {
+                String fileId = UUID.randomUUID().toString();
+                FileInfo fileInfo = new FileInfo(fileId, doc.getDisplayName(), doc.getMimeType(), doc.getSizeBytes());
+                uploadedFiles.add(fileInfo);
+            }
 
-            return geminiFiles;
+            return new ArrayList<>(uploadedFiles);
 
         } catch (Exception e) {
-            logger.error("Failed to list files from Gemini API", e);
-            throw new IOException("Failed to list files from Gemini API: " + e.getMessage(), e);
+            logger.warn("Failed to list files from File Search Store, returning in-memory list: {}", e.getMessage());
+            return new ArrayList<>(uploadedFiles);
         }
     }
 
     /**
-     * Performs a search query using Gemini API with RAG.
+     * Performs a search query using Gemini 2.5 with File Search.
+     * Uses the File Search tool to ground responses in uploaded documents.
      *
      * @param query The search query
      * @param systemPrompt The system prompt to use
-     * @return SearchResult containing the response
+     * @return SearchResult containing the response and citations
      * @throws IOException if search fails
      */
     public SearchResult search(String query, String systemPrompt) throws IOException {
         validateApiKey();
+
+        if (fileSearchStoreId == null) {
+            throw new IOException("File Search Store not initialized.");
+        }
 
         if (uploadedFiles.isEmpty()) {
             throw new IOException("No files uploaded. Please upload files before searching.");
         }
 
         try {
-            // Build the request for generateContent with grounding
+            // Build the request for generateContent with File Search tool
             ObjectNode requestBody = objectMapper.createObjectNode();
 
             // System instruction
@@ -326,6 +274,12 @@ public class GeminiCorpusService {
             ArrayNode parts = userContent.putArray("parts");
             parts.addObject().put("text", query);
 
+            // File Search tool configuration
+            ArrayNode tools = requestBody.putArray("tools");
+            ObjectNode fileSearchTool = tools.addObject();
+            ObjectNode fileSearch = fileSearchTool.putObject("fileSearch");
+            fileSearch.put("storeUri", fileSearchStoreId);
+
             // Generation config
             ObjectNode generationConfig = requestBody.putObject("generationConfig");
             generationConfig.put("temperature", 0.7);
@@ -334,7 +288,7 @@ public class GeminiCorpusService {
             generationConfig.put("maxOutputTokens", 8192);
 
             String response = webClient.post()
-                    .uri("/models/gemini-2.0-flash:generateContent?key=" + apiKey)
+                    .uri("/models/gemini-2.5-flash:generateContent?key=" + apiKey)
                     .bodyValue(requestBody.toString())
                     .retrieve()
                     .bodyToMono(String.class)
@@ -350,6 +304,7 @@ public class GeminiCorpusService {
 
     /**
      * Parses the Gemini API response into a SearchResult.
+     * Extracts generated text and citations from the response.
      */
     private SearchResult parseSearchResponse(String query, String response) throws IOException {
         JsonNode responseJson = objectMapper.readTree(response);
@@ -369,8 +324,17 @@ public class GeminiCorpusService {
         if (citationMetadata.isArray()) {
             for (JsonNode citation : citationMetadata) {
                 String uri = citation.path("uri").asText();
-                if (!uri.isEmpty()) {
-                    citations.add(uri);
+                String title = citation.path("title").asText();
+
+                // Prefer title over URI for display
+                if (!title.isEmpty()) {
+                    if (!citations.contains(title)) {
+                        citations.add(title);
+                    }
+                } else if (!uri.isEmpty()) {
+                    if (!citations.contains(uri)) {
+                        citations.add(uri);
+                    }
                 }
             }
         }
@@ -386,29 +350,22 @@ public class GeminiCorpusService {
     }
 
     /**
-     * Determines the MIME type based on file extension.
+     * Extracts the document ID from a full document resource name.
+     * E.g., "stores/xyz123/documents/abc456" -> "abc456"
      */
-    private String determineMimeType(String filename) {
-        if (filename == null) {
-            return "application/octet-stream";
+    private String extractDocumentId(String fullDocumentName) {
+        if (fullDocumentName == null || fullDocumentName.isEmpty()) {
+            return "";
         }
-        String lower = filename.toLowerCase();
-        if (lower.endsWith(".pdf")) {
-            return "application/pdf";
-        } else if (lower.endsWith(".docx")) {
-            return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        } else if (lower.endsWith(".doc")) {
-            return "application/msword";
-        } else if (lower.endsWith(".txt")) {
-            return "text/plain";
-        } else if (lower.endsWith(".md")) {
-            return "text/markdown";
+        int lastSlash = fullDocumentName.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            return fullDocumentName.substring(lastSlash + 1);
         }
-        return "application/octet-stream";
+        return fullDocumentName;
     }
 
     /**
-     * Uploads text content as a file to the Gemini API.
+     * Uploads text content as a file to the File Search Store.
      *
      * @param textContent The text content to upload
      * @return FileInfo representing the uploaded text file
@@ -417,20 +374,27 @@ public class GeminiCorpusService {
     public FileInfo uploadTextAsFile(String textContent) throws IOException {
         validateApiKey();
 
-        String filename = "project-summary-" + System.currentTimeMillis() + ".txt";
-        byte[] fileContent = textContent.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String mimeType = "text/plain";
+        if (fileSearchStoreId == null) {
+            throw new IOException("File Search Store not initialized.");
+        }
 
-        // Upload to Gemini Files API
-        String fileUri = uploadToGeminiFiles(filename, fileContent, mimeType);
+        try {
+            String filename = "project-summary-" + System.currentTimeMillis() + ".txt";
+            byte[] fileContent = textContent.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
-        // Create file info and store
-        String fileId = UUID.randomUUID().toString();
-        FileInfo fileInfo = new FileInfo(fileId, filename, mimeType, fileContent.length);
-        uploadedFiles.add(fileInfo);
+            // Create a temporary MultipartFile-like structure
+            // Since we can't directly create MultipartFile, we'll use a simpler approach
+            // by implementing a minimal MultipartFile wrapper
 
-        logger.info("Text file uploaded successfully: {} ({})", filename, fileId);
-        return fileInfo;
+            org.springframework.web.multipart.MultipartFile textFile =
+                new TextMultipartFile(filename, fileContent, "text/plain");
+
+            return uploadFile(textFile);
+
+        } catch (Exception e) {
+            logger.error("Failed to upload text as file to File Search Store", e);
+            throw new IOException("Failed to upload text file to File Search Store: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -449,5 +413,67 @@ public class GeminiCorpusService {
      */
     public boolean isApiKeyConfigured() {
         return apiKey != null && !apiKey.isEmpty();
+    }
+
+    /**
+     * Helper class to wrap text content as a MultipartFile.
+     */
+    private static class TextMultipartFile implements MultipartFile {
+        private final String filename;
+        private final byte[] content;
+        private final String mimeType;
+
+        public TextMultipartFile(String filename, byte[] content, String mimeType) {
+            this.filename = filename;
+            this.content = content;
+            this.mimeType = mimeType;
+        }
+
+        @Override
+        public String getName() {
+            return filename;
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return filename;
+        }
+
+        @Override
+        public String getContentType() {
+            return mimeType;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return content == null || content.length == 0;
+        }
+
+        @Override
+        public long getSize() {
+            return content == null ? 0 : content.length;
+        }
+
+        @Override
+        public byte[] getBytes() throws IOException {
+            return content;
+        }
+
+        @Override
+        public java.io.InputStream getInputStream() throws IOException {
+            return new java.io.ByteArrayInputStream(content);
+        }
+
+        @Override
+        public void transferTo(java.io.File dest) throws IOException, IllegalStateException {
+            try (var stream = new java.io.FileOutputStream(dest)) {
+                stream.write(content);
+            }
+        }
+
+        @Override
+        public void transferTo(java.nio.file.Path dest) throws IOException, IllegalStateException {
+            java.nio.file.Files.write(dest, content);
+        }
     }
 }
