@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="50" fill="#4A90E2"/>
+
+  <!-- Stylized G for Gemini -->
+  <g transform="translate(50, 50)">
+    <!-- Outer circle outline -->
+    <circle cx="0" cy="0" r="28" fill="none" stroke="white" stroke-width="3"/>
+
+    <!-- Horizontal bar of G -->
+    <rect x="-8" y="0" width="16" height="3" fill="white"/>
+
+    <!-- Vertical bar of G -->
+    <rect x="8" y="-8" width="3" height="16" fill="white"/>
+  </g>
+</svg>
