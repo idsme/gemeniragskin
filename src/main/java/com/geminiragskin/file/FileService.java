@@ -19,16 +19,69 @@ public class FileService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileService.class);
 
-    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB (Gemini 2.5 supports up to 100MB)
+
+    // Expanded to support all formats that Gemini 2.5 File Search handles
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-            ".pdf", ".doc", ".docx", ".txt", ".md"
+            // Documents
+            ".pdf", ".doc", ".docx", ".odt", ".rtf",
+            // Spreadsheets
+            ".csv", ".xlsx", ".xls", ".ods",
+            // Presentations
+            ".pptx", ".ppt", ".odp",
+            // Text files
+            ".txt", ".md", ".html", ".htm", ".xml", ".json", ".yaml", ".yml", ".toml",
+            // Code files
+            ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".h", ".hpp",
+            ".cs", ".go", ".rb", ".rs", ".php", ".swift", ".kt", ".scala", ".r", ".m",
+            // Other formats
+            ".log", ".sql", ".sh", ".bash", ".groovy", ".gradle"
     );
+
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
+            // Documents
             "application/pdf",
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.oasis.opendocument.text",
+            "application/rtf",
+            // Spreadsheets
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            // Presentations
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.oasis.opendocument.presentation",
+            // Text
             "text/plain",
-            "text/markdown"
+            "text/markdown",
+            "text/html",
+            "application/xml",
+            "text/xml",
+            "application/json",
+            "text/yaml",
+            // Code
+            "text/x-python",
+            "text/javascript",
+            "text/typescript",
+            "text/x-java",
+            "text/x-c",
+            "text/x-c++",
+            "text/x-csharp",
+            "text/x-go",
+            "text/x-ruby",
+            "text/x-rust",
+            "text/x-php",
+            "text/x-swift",
+            "text/x-kotlin",
+            "text/x-scala",
+            "text/x-r",
+            "text/x-objectivec",
+            "text/x-sh",
+            "text/x-sql",
+            "text/x-log"
     );
 
     private final GeminiCorpusService geminiCorpusService;
@@ -129,10 +182,10 @@ public class FileService {
             throw new FileValidationException("File name is required");
         }
 
-        // Check file size
+        // Check file size (Gemini 2.5 supports up to 100MB per file)
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new FileValidationException(
-                    String.format("File size exceeds the maximum limit of 50MB. File size: %.1f MB",
+                    String.format("File size exceeds the maximum limit of 100MB. File size: %.1f MB",
                             file.getSize() / (1024.0 * 1024.0)));
         }
 
@@ -140,7 +193,8 @@ public class FileService {
         String extension = getFileExtension(originalFilename).toLowerCase();
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new FileValidationException(
-                    String.format("Invalid file type '%s'. Allowed types: PDF, Word (.doc, .docx), TXT, MD",
+                    String.format("Invalid file type '%s'. Allowed types: PDF, Word (doc/docx), Excel (xlsx/xls), " +
+                            "PowerPoint (pptx/ppt), Text (txt/md/html/json/xml), Code (py/js/java/cpp/cs/go/rb), and others",
                             extension));
         }
 

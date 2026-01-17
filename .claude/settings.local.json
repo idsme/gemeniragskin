@@ -3,7 +3,14 @@
     "allow": [
       "Bash(convert:*)",
       "Bash(python:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebSearch",
+      "WebFetch(domain:blog.google)",
+      "Bash(mvn clean compile:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nMigration: Upgrade from Gemini 2.0 to 2.5 Flash with File Search Stores\n\n- Update model from gemini-2.0-flash to gemini-2.5-flash\n- Create new FileSearchStoreService for managing File Search Stores\n- Refactor GeminiCorpusService to use persistent File Search Stores instead of temporary Files API\n- Replace resumable upload with direct store import \\(simpler API\\)\n- Update search queries to use the fileSearch tool configuration\n- Benefits:\n  * Files now persist indefinitely \\(no 48-hour expiry\\)\n  * Automatic document chunking and embedding by Gemini\n  * Free storage and query-time embeddings\n  * Richer citation data with document titles and character offsets\n  * Better semantic search with native File Search\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nSession 39: Complete Gemini 2.5 migration with advanced features\n\nTasks 6-11 implementation:\n\n6. Expanded file support \\(Task 6\\)\n   - Added 40+ file types: CSV, XLSX, PPTX, code files \\(Python, Java, C++, Go, etc.\\)\n   - Increased file size limit from 50MB to 100MB\n   - Updated MIME type mappings for all new formats\n\n7. Metadata filtering \\(Task 7\\)\n   - Added metadata support to file uploads\n   - Implemented AIP-160 filter syntax for document queries\n   - buildMetadataFilterSpec\\(\\) for flexible filtering\n   - Support for project, version, department tags on documents\n\n8. Improved citations \\(Task 8\\)\n   - Created Citation class with detailed citation tracking\n   - Added character offsets \\(startIndex, endIndex\\) from source\n   - Enhanced SearchResult to support both simple and detailed citations\n   - Fallback for backwards compatibility with string citations\n\n9. Storage tier management \\(Task 9\\)\n   - Created StorageTier enum \\(Free/Tier1/Tier2/Tier3\\)\n   - Implemented StorageManager for quota tracking\n   - Auto-upgrade recommendations when approaching limits\n   - Storage usage monitoring and alerts\n\n10. Enhanced error handling \\(Task 10\\)\n    - Created GeminiApiException with error categorization\n    - User-friendly error messages with recovery suggestions\n    - Automatic error type detection from messages\n    - HTTP status code mapping to specific errors\n\n11. Optimized file deletion \\(Task 11\\)\n    - Added documentId caching to FileInfo for O\\(1\\) deletion\n    - Eliminated need to list all documents for each deletion\n    - Graceful handling of already-deleted documents\n    - Efficient storage quota updates on deletion\n\nAll compilation errors resolved. Project builds successfully.\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

@@ -3,6 +3,7 @@ package com.geminiragskin.corpus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.geminiragskin.exception.GeminiApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -17,11 +18,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service for managing Gemini File Search Stores.
- * Handles store creation, file import, document management, and store deletion.
+ * Handles store creation, file import, document management, metadata filtering, and store deletion.
  */
 @Service
 public class FileSearchStoreService {
@@ -80,6 +83,20 @@ public class FileSearchStoreService {
     }
 
     /**
+     * Imports a file into a File Search Store with optional metadata.
+     * The file is automatically indexed and embedded for search.
+     *
+     * @param storeId The store resource name (e.g., "stores/xyz123")
+     * @param file    The file to import
+     * @param metadata Optional key-value metadata for filtering (e.g., project, version, department)
+     * @return Document information containing the document ID
+     * @throws IOException if import fails
+     */
+    public DocumentInfo importFileToStore(String storeId, MultipartFile file, Map<String, String> metadata) throws IOException {
+        return importFileToStoreInternal(storeId, file, metadata);
+    }
+
+    /**
      * Imports a file into a File Search Store.
      * The file is automatically indexed and embedded for search.
      *
@@ -89,6 +106,13 @@ public class FileSearchStoreService {
      * @throws IOException if import fails
      */
     public DocumentInfo importFileToStore(String storeId, MultipartFile file) throws IOException {
+        return importFileToStoreInternal(storeId, file, null);
+    }
+
+    /**
+     * Internal method to import file with optional metadata.
+     */
+    private DocumentInfo importFileToStoreInternal(String storeId, MultipartFile file, Map<String, String> metadata) throws IOException {
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IOException("Gemini API key not configured");
         }
@@ -105,6 +129,18 @@ public class FileSearchStoreService {
             builder.part("file", new ByteArrayResource(fileContent))
                     .filename(filename)
                     .header("Content-Type", mimeType);
+
+            // Add metadata if provided
+            if (metadata != null && !metadata.isEmpty()) {
+                ObjectNode metadataNode = objectMapper.createObjectNode();
+                for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                    metadataNode.put(entry.getKey(), entry.getValue());
+                }
+                builder.part("metadata", new ByteArrayResource(objectMapper.writeValueAsBytes(metadataNode)))
+                        .header("Content-Type", "application/json");
+
+                logger.debug("Adding metadata to document: {}", metadata);
+            }
 
             String response = webClient.post()
                     .uri("/fileSearchStores/{storeId}/documents?key=" + apiKey, storeId)
@@ -224,6 +260,49 @@ public class FileSearchStoreService {
             logger.error("Failed to delete File Search Store: {}", storeId, e);
             throw new IOException("Failed to delete File Search Store: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Builds a filter specification for metadata-based document filtering.
+     * Uses AIP-160 list filter syntax for Gemini API.
+     *
+     * @param metadata Key-value pairs for filtering (e.g., project="ProjectXYZ", version="1.0")
+     * @return Filter specification string for API queries
+     */
+    public String buildMetadataFilterSpec(Map<String, String> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder filterSpec = new StringBuilder();
+        List<String> filters = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            // Format: metadata.key="value"
+            filters.add(String.format("metadata.%s=\"%s\"", entry.getKey(), escapeFilterValue(entry.getValue())));
+        }
+
+        // Join multiple filters with AND
+        for (int i = 0; i < filters.size(); i++) {
+            if (i > 0) {
+                filterSpec.append(" AND ");
+            }
+            filterSpec.append(filters.get(i));
+        }
+
+        logger.debug("Built metadata filter spec: {}", filterSpec);
+        return filterSpec.toString();
+    }
+
+    /**
+     * Escapes special characters in filter values for AIP-160 syntax.
+     */
+    private String escapeFilterValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        // Escape double quotes and backslashes
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     /**

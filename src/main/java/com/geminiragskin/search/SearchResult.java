@@ -7,18 +7,22 @@ import java.util.List;
 
 /**
  * DTO representing a search result from the Gemini API.
+ * Supports both simple string citations (for backwards compatibility) and
+ * detailed Citation objects with character offsets and excerpts.
  */
 public class SearchResult {
 
     private String query;
     private String response;
     private String responseHtml; // Pre-rendered markdown
-    private List<String> citations;
+    private List<String> citations;  // For backwards compatibility
+    private List<Citation> detailedCitations;  // Enhanced citation data
     private LocalDateTime timestamp;
     private String formattedTimestamp;
 
     public SearchResult() {
         this.citations = new ArrayList<>();
+        this.detailedCitations = new ArrayList<>();
         this.timestamp = LocalDateTime.now();
         this.formattedTimestamp = formatTimestamp(this.timestamp);
     }
@@ -27,6 +31,16 @@ public class SearchResult {
         this.query = query;
         this.response = response;
         this.citations = citations != null ? citations : new ArrayList<>();
+        this.detailedCitations = new ArrayList<>();
+        this.timestamp = LocalDateTime.now();
+        this.formattedTimestamp = formatTimestamp(this.timestamp);
+    }
+
+    public SearchResult(String query, String response, List<String> citations, List<Citation> detailedCitations) {
+        this.query = query;
+        this.response = response;
+        this.citations = citations != null ? citations : new ArrayList<>();
+        this.detailedCitations = detailedCitations != null ? detailedCitations : new ArrayList<>();
         this.timestamp = LocalDateTime.now();
         this.formattedTimestamp = formatTimestamp(this.timestamp);
     }
@@ -70,6 +84,25 @@ public class SearchResult {
         this.citations = citations;
     }
 
+    public List<Citation> getDetailedCitations() {
+        return detailedCitations;
+    }
+
+    public void setDetailedCitations(List<Citation> detailedCitations) {
+        this.detailedCitations = detailedCitations != null ? detailedCitations : new ArrayList<>();
+    }
+
+    public void addDetailedCitation(Citation citation) {
+        if (this.detailedCitations == null) {
+            this.detailedCitations = new ArrayList<>();
+        }
+        this.detailedCitations.add(citation);
+    }
+
+    public boolean hasDetailedCitations() {
+        return detailedCitations != null && !detailedCitations.isEmpty();
+    }
+
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
@@ -94,6 +127,7 @@ public class SearchResult {
                 ", response='" + response + '\'' +
                 ", responseHtml='" + responseHtml + '\'' +
                 ", citations=" + citations +
+                ", detailedCitations=" + detailedCitations +
                 ", timestamp=" + timestamp +
                 ", formattedTimestamp='" + formattedTimestamp + '\'' +
                 '}';

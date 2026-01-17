@@ -2,6 +2,7 @@ package com.geminiragskin.corpus;
 
 import com.geminiragskin.file.FileInfo;
 import com.geminiragskin.search.SearchResult;
+import com.geminiragskin.exception.GeminiApiException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -42,13 +43,15 @@ public class GeminiCorpusService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private final FileSearchStoreService fileSearchStoreService;
+    private final StorageManager storageManager;
 
     // In-memory storage for uploaded file metadata (for display purposes)
     private final List<FileInfo> uploadedFiles = new CopyOnWriteArrayList<>();
     private String fileSearchStoreId;
 
-    public GeminiCorpusService(FileSearchStoreService fileSearchStoreService) {
+    public GeminiCorpusService(FileSearchStoreService fileSearchStoreService, StorageManager storageManager) {
         this.fileSearchStoreService = fileSearchStoreService;
+        this.storageManager = storageManager;
         this.webClient = WebClient.builder()
                 .baseUrl(GEMINI_API_BASE)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -68,6 +71,11 @@ public class GeminiCorpusService {
         }
 
         try {
+            // Initialize storage manager
+            if (storageManager != null) {
+                storageManager.init();
+            }
+
             // Create a fresh File Search Store
             createFileSearchStore();
             logger.info("Gemini File Search Store initialized successfully");
@@ -128,6 +136,19 @@ public class GeminiCorpusService {
      * @throws IOException if upload fails
      */
     public FileInfo uploadFile(MultipartFile file) throws IOException {
+        return uploadFile(file, null);
+    }
+
+    /**
+     * Uploads a file to the File Search Store with optional metadata.
+     * The file is automatically indexed and embedded for semantic search.
+     *
+     * @param file The file to upload
+     * @param metadata Optional metadata for filtering (project, version, department, etc.)
+     * @return FileInfo representing the uploaded file
+     * @throws IOException if upload fails
+     */
+    public FileInfo uploadFile(MultipartFile file, java.util.Map<String, String> metadata) throws IOException {
         validateApiKey();
 
         if (fileSearchStoreId == null) {
@@ -137,29 +158,46 @@ public class GeminiCorpusService {
         try {
             String filename = file.getOriginalFilename();
 
-            // Import file to File Search Store
+            // Import file to File Search Store (with optional metadata)
             FileSearchStoreService.DocumentInfo docInfo =
-                fileSearchStoreService.importFileToStore(fileSearchStoreId, file);
-
-            // Extract document ID from the full name (format: "stores/xyz/documents/abc")
-            String documentId = extractDocumentId(docInfo.getName());
+                metadata != null ?
+                    fileSearchStoreService.importFileToStore(fileSearchStoreId, file, metadata) :
+                    fileSearchStoreService.importFileToStore(fileSearchStoreId, file);
 
             // Create file info for local tracking (display purposes)
             String fileId = UUID.randomUUID().toString();
-            FileInfo fileInfo = new FileInfo(fileId, filename, docInfo.getMimeType(), file.getSize());
+            // Extract document ID from the full name (format: "stores/xyz/documents/abc")
+            String documentId = extractDocumentId(docInfo.getName());
+            FileInfo fileInfo = new FileInfo(fileId, filename, docInfo.getMimeType(), file.getSize(), documentId);
             uploadedFiles.add(fileInfo);
 
-            logger.info("File uploaded to File Search Store: {} ({})", filename, documentId);
+            // Track storage usage
+            if (storageManager != null) {
+                storageManager.addFileSize(file.getSize());
+
+                // Check if we're approaching storage limit
+                if (storageManager.wouldExceedLimit(0)) {
+                    logger.warn("Storage usage: {}. Approaching tier limit.",
+                            storageManager.getStatus());
+                }
+            }
+
+            logger.info("File uploaded to File Search Store: {} ({}) with metadata: {}",
+                    filename, documentId, metadata);
             return fileInfo;
 
         } catch (Exception e) {
             logger.error("Failed to upload file to File Search Store: {}", file.getOriginalFilename(), e);
-            throw new IOException("Failed to upload file to File Search Store: " + e.getMessage(), e);
+
+            // Try to categorize the error
+            GeminiApiException geminiException = GeminiApiException.fromMessage(e.getMessage());
+            throw new IOException(geminiException.getUserFriendlyMessage(), e);
         }
     }
 
     /**
      * Deletes a file from the File Search Store.
+     * Uses cached document ID for efficient deletion.
      *
      * @param fileId The ID of the file to delete
      * @throws IOException if deletion fails
@@ -172,7 +210,7 @@ public class GeminiCorpusService {
         }
 
         try {
-            // Find the file by ID and construct the document resource name
+            // Find the file by ID
             FileInfo fileToDelete = uploadedFiles.stream()
                     .filter(f -> f.getId().equals(fileId))
                     .findFirst()
@@ -180,28 +218,33 @@ public class GeminiCorpusService {
 
             if (fileToDelete == null) {
                 logger.warn("File not found for deletion: {}", fileId);
-                uploadedFiles.removeIf(f -> f.getId().equals(fileId));
                 return;
             }
 
-            // List documents to find matching one
-            List<FileSearchStoreService.DocumentInfo> documents =
-                fileSearchStoreService.listDocuments(fileSearchStoreId);
-
-            for (FileSearchStoreService.DocumentInfo doc : documents) {
-                if (doc.getDisplayName().equals(fileToDelete.getName())) {
-                    // Delete from File Search Store
-                    fileSearchStoreService.deleteDocument(fileSearchStoreId, extractDocumentId(doc.getName()));
+            // Delete from File Search Store using cached document ID
+            if (fileToDelete.getDocumentId() != null && !fileToDelete.getDocumentId().isEmpty()) {
+                try {
+                    fileSearchStoreService.deleteDocument(fileSearchStoreId, fileToDelete.getDocumentId());
                     logger.info("File deleted from File Search Store: {}", fileId);
-                    break;
+                } catch (Exception e) {
+                    logger.warn("Failed to delete document from store (may already be deleted): {}", e.getMessage());
+                    // Continue to remove from local list even if store deletion fails
                 }
             }
 
-            // Remove from in-memory list
+            // Remove from in-memory list and update storage tracking
             uploadedFiles.removeIf(f -> f.getId().equals(fileId));
+
+            if (storageManager != null) {
+                storageManager.removeFileSize(fileToDelete.getSize());
+                logger.debug("Storage usage after deletion: {}", storageManager.getStatus());
+            }
+
+            logger.info("File removed from local tracking: {} ({})", fileToDelete.getName(), fileId);
 
         } catch (Exception e) {
             logger.error("Failed to delete file from File Search Store: {}", fileId, e);
+            // Attempt to remove from local list anyway
             uploadedFiles.removeIf(f -> f.getId().equals(fileId));
             throw new IOException("Failed to delete file from File Search Store: " + e.getMessage(), e);
         }
@@ -226,7 +269,8 @@ public class GeminiCorpusService {
             uploadedFiles.clear();
             for (FileSearchStoreService.DocumentInfo doc : storeDocuments) {
                 String fileId = UUID.randomUUID().toString();
-                FileInfo fileInfo = new FileInfo(fileId, doc.getDisplayName(), doc.getMimeType(), doc.getSizeBytes());
+                String documentId = extractDocumentId(doc.getName());
+                FileInfo fileInfo = new FileInfo(fileId, doc.getDisplayName(), doc.getMimeType(), doc.getSizeBytes(), documentId);
                 uploadedFiles.add(fileInfo);
             }
 
@@ -248,6 +292,20 @@ public class GeminiCorpusService {
      * @throws IOException if search fails
      */
     public SearchResult search(String query, String systemPrompt) throws IOException {
+        return search(query, systemPrompt, null);
+    }
+
+    /**
+     * Performs a search query using Gemini 2.5 with File Search and metadata filtering.
+     * Uses the File Search tool to ground responses in uploaded documents.
+     *
+     * @param query The search query
+     * @param systemPrompt The system prompt to use
+     * @param metadataFilter Optional metadata filter (e.g., {project: "ProjectXYZ", version: "1.0"})
+     * @return SearchResult containing the response and citations
+     * @throws IOException if search fails
+     */
+    public SearchResult search(String query, String systemPrompt, java.util.Map<String, String> metadataFilter) throws IOException {
         validateApiKey();
 
         if (fileSearchStoreId == null) {
@@ -274,11 +332,20 @@ public class GeminiCorpusService {
             ArrayNode parts = userContent.putArray("parts");
             parts.addObject().put("text", query);
 
-            // File Search tool configuration
+            // File Search tool configuration with optional metadata filtering
             ArrayNode tools = requestBody.putArray("tools");
             ObjectNode fileSearchTool = tools.addObject();
             ObjectNode fileSearch = fileSearchTool.putObject("fileSearch");
             fileSearch.put("storeUri", fileSearchStoreId);
+
+            // Add metadata filter if provided
+            if (metadataFilter != null && !metadataFilter.isEmpty()) {
+                String filterSpec = fileSearchStoreService.buildMetadataFilterSpec(metadataFilter);
+                if (!filterSpec.isEmpty()) {
+                    fileSearch.put("filterSpec", filterSpec);
+                    logger.debug("Applied metadata filter to search: {}", filterSpec);
+                }
+            }
 
             // Generation config
             ObjectNode generationConfig = requestBody.putObject("generationConfig");
@@ -298,13 +365,16 @@ public class GeminiCorpusService {
 
         } catch (Exception e) {
             logger.error("Search failed for query: {}", query, e);
-            throw new IOException("Search failed: " + e.getMessage(), e);
+
+            // Categorize the error
+            GeminiApiException geminiException = GeminiApiException.fromMessage(e.getMessage());
+            throw new IOException(geminiException.getUserFriendlyMessage(), e);
         }
     }
 
     /**
      * Parses the Gemini API response into a SearchResult.
-     * Extracts generated text and citations from the response.
+     * Extracts generated text and detailed citations from the response.
      */
     private SearchResult parseSearchResponse(String query, String response) throws IOException {
         JsonNode responseJson = objectMapper.readTree(response);
@@ -315,38 +385,50 @@ public class GeminiCorpusService {
                 .path("content").path("parts").path(0)
                 .path("text").asText("");
 
-        // Extract citations if present
-        List<String> citations = new ArrayList<>();
+        // Extract simple citations for backwards compatibility
+        List<String> simpleCitations = new ArrayList<>();
+
+        // Extract detailed citations with character offsets
+        List<com.geminiragskin.search.Citation> detailedCitations = new ArrayList<>();
         JsonNode citationMetadata = responseJson
                 .path("candidates").path(0)
                 .path("citationMetadata").path("citationSources");
 
         if (citationMetadata.isArray()) {
             for (JsonNode citation : citationMetadata) {
-                String uri = citation.path("uri").asText();
-                String title = citation.path("title").asText();
+                String uri = citation.path("uri").asText("");
+                String title = citation.path("title").asText("");
+                int startIndex = citation.path("startIndex").asInt(-1);
+                int endIndex = citation.path("endIndex").asInt(-1);
 
-                // Prefer title over URI for display
-                if (!title.isEmpty()) {
-                    if (!citations.contains(title)) {
-                        citations.add(title);
-                    }
-                } else if (!uri.isEmpty()) {
-                    if (!citations.contains(uri)) {
-                        citations.add(uri);
-                    }
+                // Create detailed citation
+                com.geminiragskin.search.Citation detailedCitation =
+                    new com.geminiragskin.search.Citation(uri, title, startIndex, endIndex);
+                detailedCitations.add(detailedCitation);
+
+                // For simple citations, prefer title over URI
+                String displayCitation = !title.isEmpty() ? title : uri;
+                if (!displayCitation.isEmpty() && !simpleCitations.contains(displayCitation)) {
+                    simpleCitations.add(displayCitation);
                 }
             }
         }
 
         // If no API citations, add uploaded file names as sources
-        if (citations.isEmpty() && !uploadedFiles.isEmpty()) {
+        if (simpleCitations.isEmpty() && !uploadedFiles.isEmpty()) {
             for (FileInfo file : uploadedFiles) {
-                citations.add(file.getName());
+                simpleCitations.add(file.getName());
+                // Also add as a detailed citation without offset info
+                com.geminiragskin.search.Citation detailedCitation =
+                    new com.geminiragskin.search.Citation("", file.getName(), -1, -1);
+                detailedCitations.add(detailedCitation);
             }
         }
 
-        return new SearchResult(query, generatedText, citations);
+        SearchResult result = new SearchResult(query, generatedText, simpleCitations, detailedCitations);
+
+        logger.debug("Parsed {} citations from search response", detailedCitations.size());
+        return result;
     }
 
     /**
@@ -413,6 +495,15 @@ public class GeminiCorpusService {
      */
     public boolean isApiKeyConfigured() {
         return apiKey != null && !apiKey.isEmpty();
+    }
+
+    /**
+     * Gets the storage manager for monitoring and tier information.
+     *
+     * @return StorageManager instance
+     */
+    public StorageManager getStorageManager() {
+        return storageManager;
     }
 
     /**

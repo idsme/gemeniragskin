@@ -11,6 +11,7 @@ public class FileInfo {
     private long sizeBytes;
     private String displaySize;
     private String iconClass;
+    private String documentId;  // Store document ID for efficient deletion from File Search Store
 
     public FileInfo() {
     }
@@ -22,6 +23,11 @@ public class FileInfo {
         this.sizeBytes = sizeBytes;
         this.displaySize = formatSize(sizeBytes);
         this.iconClass = determineIconClass(name, mimeType);
+    }
+
+    public FileInfo(String id, String name, String mimeType, long sizeBytes, String documentId) {
+        this(id, name, mimeType, sizeBytes);
+        this.documentId = documentId;
     }
 
     private String formatSize(long bytes) {
@@ -97,5 +103,20 @@ public class FileInfo {
 
     public void setIconClass(String iconClass) {
         this.iconClass = iconClass;
+    }
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
+    /**
+     * Shorthand for getting size in bytes.
+     */
+    public long getSize() {
+        return sizeBytes;
     }
 }
